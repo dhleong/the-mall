@@ -55,10 +55,5 @@ export interface IStore<V> {
     dispatch(); // TODO
 }
 
-export interface IStoreImpl<V> extends IStore<V> {
-    /**
-     * Like getSnapshot, but guaranteed to be the actual
-     * internal state, for efficiency
-     */
-    peek(): V;
+export interface IStoreImpl<V> extends IStore<V>, IRef<V> {
 }

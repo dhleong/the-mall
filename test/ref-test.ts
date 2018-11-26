@@ -37,6 +37,9 @@ describe("Level 1 Ref", () => {
         changes.should.be.empty;
 
         // TODO modify store
+        store.loadSnapshot({ships: {1: 2}});
+
+        changes.should.not.be.empty;
     });
 });
 

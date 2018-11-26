@@ -1,5 +1,6 @@
 import { BaseSubContext } from "./context";
 import { IStoreImpl, ISubContext } from "./model";
+import { Reference } from "./sub";
 
 class StoreContext<T> extends BaseSubContext {
     constructor(
@@ -16,13 +17,14 @@ class StoreContext<T> extends BaseSubContext {
 
 export class Store<V> implements IStoreImpl<V> {
     private state: V;
+    private ref = new Reference(() => this.state, []);
 
     constructor(initialState?: V) {
         this.state = initialState;
     }
 
-    peek(): V {
-        return this.state;
+    deref(): V {
+        return this.ref.deref();
     }
 
     getContext(): ISubContext {
@@ -38,6 +40,7 @@ export class Store<V> implements IStoreImpl<V> {
 
     loadSnapshot(snapshot: V): void {
         this.state = snapshot;
+        this.ref.onDependenciesChanged(snapshot);
     }
 
     dispatch() {
