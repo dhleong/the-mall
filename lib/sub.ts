@@ -7,6 +7,8 @@ export class Reference<V, P extends Params>
 extends BaseSubContext
 implements IRef<V>, ISource<V> {
 
+    name: string | undefined;
+
     private lastValue: V | Valueless = NO_VALUE;
     private subscribers: Set<(v: V) => any> = new Set();
 
@@ -48,6 +50,16 @@ implements IRef<V>, ISource<V> {
         this.subscribers.delete(onChange);
     }
 
+    toString(): string {
+        if (this.name) return this.name;
+        const fnName = this.pullValue.name;
+        if (fnName) {
+            const name = `Reference(${fnName})`;
+            this.name = name;
+            return name;
+        }
+        return `Reference()`;
+    }
 }
 
 // NOTE: we use an extra layer of indirection so that sub()
@@ -60,6 +72,7 @@ const rootRef = new Reference(() => {
     // this seems like a hack:
     return (s as IStoreImpl<any>).deref();
 }, []);
+rootRef.name = "Reference(@root)";
 
 function rootSub<V>(): IRef<V> {
     return rootRef as any as IRef<V>;

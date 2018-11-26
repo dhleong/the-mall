@@ -21,8 +21,8 @@ describe("Level 0 Ref", () => {
 });
 
 describe("Level 1 Ref", () => {
-    it.skip("Notifies subscribers on Store change", () => {
-        const s = sub(() => rootSub().deref().ships);
+    it("Notifies subscribers on Store change", () => {
+        const s = sub(function foo() { return rootSub().deref().ships; });
         const ref = s();
         const original = derefWith(store, ref);
         original.should.deep.equal({});

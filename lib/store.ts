@@ -1,4 +1,4 @@
-import { BaseSubContext } from "./context";
+import { BaseSubContext, withContext } from "./context";
 import { IStoreImpl, ISubContext } from "./model";
 import { Reference } from "./sub";
 
@@ -13,6 +13,14 @@ class StoreContext<T> extends BaseSubContext {
     onDependenciesChanged(dependencies: any) {
         throw new Error("StoreContext should have no dependencies");
     }
+
+    subscribeTo(parent: ISubContext) {
+        // nop; StoreContext is never interested in dependencies
+    }
+
+    toString(): string {
+        return "StoreContext()";
+    }
 }
 
 export class Store<V> implements IStoreImpl<V> {
@@ -21,6 +29,7 @@ export class Store<V> implements IStoreImpl<V> {
 
     constructor(initialState?: V) {
         this.state = initialState;
+        this.ref.name = "Reference(@Store)";
     }
 
     deref(): V {
@@ -40,11 +49,21 @@ export class Store<V> implements IStoreImpl<V> {
 
     loadSnapshot(snapshot: V): void {
         this.state = snapshot;
-        this.ref.onDependenciesChanged(snapshot);
+        this.dispatchStateChanged();
     }
 
     dispatch() {
         throw new Error("Method not implemented.");
     }
 
+    toString(): string {
+        return "Store()";
+    }
+
+    private dispatchStateChanged() {
+        const snapshot = this.state;
+        withContext(this, (state) => {
+            this.ref.onDependenciesChanged(state);
+        }, snapshot);
+    }
 }

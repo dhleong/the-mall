@@ -58,6 +58,12 @@ export abstract class BaseSubContext implements ISubContext {
 
     subscribeTo(parent: ISubContext) {
         if (!isSource(parent)) return;
+        if (this.subscriptions.has(parent)) {
+            // already subscribed!
+            // TODO: this is probably an illegal state
+            // once we implement onEnter and onExit
+            return;
+        }
 
         const onChange = v => {
             // pass it on
@@ -98,9 +104,12 @@ export function withContext<V, P extends Params = []>(
         ? (context as IStore<any>).getContext()
         : context as ISubContext;
 
+    // console.log(`withContext(${context}): ${fn}`);
     const current = GlobalContextManager.peek();
     if (current) {
-        subContext.subscribeTo(current);
+        // the Context stack is depth-first, so the "current"
+        // Context will *depend on* our new one
+        current.subscribeTo(subContext);
     }
 
     GlobalContextManager.push(subContext);

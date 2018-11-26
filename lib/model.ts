@@ -13,6 +13,7 @@ export interface ISource<V> {
 }
 
 export function isSource(obj: any): obj is ISource<any> {
+    if (obj.dispatch) return false; // it's a Store
     return obj.subscribe && obj.unsubscribe;
 }
 
