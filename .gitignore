@@ -1,0 +1,5 @@
+node_modules/
+.next
+pages/**/*.d.ts
+src/**/*.d.ts
+dist/
