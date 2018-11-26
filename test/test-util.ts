@@ -7,3 +7,14 @@ export function derefWith<V>(
 ): V {
     return withContext(store, () => ref.deref());
 }
+
+export interface IStoreState {
+    ships: {};
+}
+
+export function newState(): IStoreState {
+    return {
+        ships: {
+        },
+    };
+}

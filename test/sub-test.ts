@@ -2,29 +2,21 @@ import * as chai from "chai";
 
 import { Store } from "../lib/store";
 import { sub } from "../lib/sub";
-import { derefWith } from "./test-util";
+
+import { derefWith, IStoreState, newState } from "./test-util";
 
 chai.should();
 
-type StoreState = {
-    ships: {},
-};
-
-const defaultState: StoreState = {
-    ships: {
-    },
-};
-
-let store: Store<StoreState>;
+let store: Store<IStoreState>;
 beforeEach(function() {
-    store = new Store(defaultState);
+    store = new Store(newState());
 });
 
 describe("Level 0 sub()", () => {
     it("returns the store", () => {
         const s = sub();
         const v = derefWith(store, s());
-        v.should.equal(defaultState);
+        v.should.deep.equal(newState());
     });
 });
 
