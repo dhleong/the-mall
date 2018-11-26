@@ -9,7 +9,8 @@ export function derefWith<V>(
 }
 
 export interface IStoreState {
-    ships: {};
+    ships?: {};
+    pilots?: {};
 }
 
 export function newState(): IStoreState {
