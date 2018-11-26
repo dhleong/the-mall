@@ -92,7 +92,9 @@ export function withContext<V, P extends Params = []>(
 ): V {
 
     // tslint:disable-next-line
-    const subContext: ISubContext = context["getContext"]
+    const givenStore = context["getContext"];
+
+    const subContext: ISubContext = givenStore
         ? (context as IStore<any>).getContext()
         : context as ISubContext;
 
@@ -104,5 +106,11 @@ export function withContext<V, P extends Params = []>(
     GlobalContextManager.push(subContext);
     const result = fn(...params);
     GlobalContextManager.pop(subContext);
+
+    if (givenStore) {
+        // ?
+        subContext.dispose();
+    }
+
     return result;
 }
