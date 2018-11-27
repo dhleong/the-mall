@@ -20,17 +20,18 @@ implements IRef<V>, ISource<V> {
     }
 
     deref(): V {
-        // TODO: we *depend on* any subscriptions that
-        // get deref'd within this context.
-        const v = withContext(this, this.pullValue, ...this.args);
-        this.lastValue = v;
-        return v;
+        if (this.lastValue === NO_VALUE) {
+            return this.forceDeref();
+        }
+
+        // return the cached value
+        return this.lastValue;
     }
 
     onDependenciesChanged(dependencies: any) {
         // compute new value; if it has changed, notify subscribers
         const last = this.lastValue;
-        const next = this.deref();
+        const next = this.forceDeref();
 
         if (!areSame(last, next)) {
             // notify subscribers
@@ -60,19 +61,38 @@ implements IRef<V>, ISource<V> {
         }
         return `Reference()`;
     }
+
+    protected forceDeref(): V {
+        // NOTE: we *depend on* any subscriptions that
+        // get deref'd within this context.
+        const v = withContext(this, this.pullValue, ...this.args);
+        this.lastValue = v;
+        return v;
+    }
 }
 
 // NOTE: we use an extra layer of indirection so that sub()
 // doesn't have to be called within a context. If it's a big deal,
 // we could add extra logic to detect if it *is* in a context and
 // optimize away the indirection...
-const rootRef = new Reference(() => {
-    const s = GlobalContextManager.store();
+class RootReference<V> extends Reference<V, []> {
+    constructor() {
+        super(() => {
+            const s = GlobalContextManager.store();
 
-    // this seems like a hack:
-    return (s as IStoreImpl<any>).deref();
-}, []);
-rootRef.name = "Reference(@root)";
+            // this seems like a hack:
+            return (s as IStoreImpl<any>).deref();
+        }, []);
+        this.name = "Reference(@root)";
+    }
+
+    deref() {
+        // TODO we only need to do this if the store has changed?
+        // does it matter?
+        return super.forceDeref();
+    }
+}
+const rootRef = new RootReference();
 
 function rootSub<V>(): IRef<V> {
     return rootRef as any as IRef<V>;

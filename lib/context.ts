@@ -35,18 +35,32 @@ export const GlobalContextManager = new GlobalContextManagerImpl();
 export abstract class BaseSubContext implements ISubContext {
 
     private readonly subscriptions: Map<ISource<any>, (v: any) => any> = new Map();
+    private readonly oldSubscriptions: Map<ISource<any>, (v: any) => any> = new Map();
 
     private readonly dependencyValues = new Map<ISubContext, any>();
 
     private myStore: IStore<any> | null;
 
     onEnter() {
-        // TODO prepare for subscriptions (subscribeTo)
+        // prepare for subscriptions (subscribeTo)
+        // basically, we copy all our current subscriptions
+        // into oldSubscriptions; as we subscribeTo things
+        // while in this context, attempting to subscribe to
+        // a source we've already subscribed to will trigger
+        // that source to be removed from oldSubscriptions
+        this.subscriptions.forEach((onChange, source) => {
+            this.oldSubscriptions.set(source, onChange);
+        });
     }
+
     onExit() {
-        // TODO unsubscribe from any old subscriptions
+        // unsubscribe from any remaining old subscriptions
         // (anything not mentioned in a call subscribeTo
         // since onEnter)
+        this.oldSubscriptions.forEach((onChange, parent) => {
+            parent.unsubscribe(onChange);
+        });
+        this.oldSubscriptions.clear();
     }
 
     dispose() {
@@ -60,8 +74,9 @@ export abstract class BaseSubContext implements ISubContext {
         if (!isSource(parent)) return;
         if (this.subscriptions.has(parent)) {
             // already subscribed!
-            // TODO: this is probably an illegal state
-            // once we implement onEnter and onExit
+            // since we visited the subscription in this pass,
+            // we want to keep it; remove from oldSubscriptions
+            this.oldSubscriptions.delete(parent);
             return;
         }
 

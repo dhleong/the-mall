@@ -13,6 +13,10 @@ class TestableContext extends BaseSubContext {
     onDependenciesChanged(dependencies: any) {
         this.dependencyChanges.push(dependencies);
     }
+
+    toString() {
+        return "TestableContext()";
+    }
 }
 
 let store: Store<IStoreState>;
@@ -28,8 +32,8 @@ describe("Context", () => {
         const ctx = new TestableContext();
         ctx.setStore(store);
 
-        const ships = sub(() => rootSub().deref().ships);
-        const shipById = sub((id: string) => ships().deref()[id]);
+        const ships = sub(function _ships() { return rootSub().deref().ships; });
+        const shipById = sub(function _byId(id: string) { return ships().deref()[id]; });
 
         function render() {
             // this creates a dependency on ships()
@@ -49,17 +53,17 @@ describe("Context", () => {
 
         // changing the Store triggers another pass
         store.loadSnapshot({ ships: {serenity: 9001}});
-        ctx.dependencyChanges.should.have.lengthOf(2);
+        const postSnapshotChanges = [... ctx.dependencyChanges];
+        postSnapshotChanges.should.have.lengthOf(1);
 
-        // TODO on pass 2, references that were not deref'd
+        // on pass 2, references that were not deref'd
         //  should get unsubscribed from
         withContext(ctx, render);
 
-        // TODO the ships() sub did not change, and the previous
+        // the ships() sub did not change, and the previous
         // render should have unsubscribed from shipById, so
         // this change should not trigger another render
         store.loadSnapshot({ ships: {serenity: 9002}});
-        ctx.dependencyChanges.should.have.lengthOf(2);
-
+        ctx.dependencyChanges.should.have.lengthOf(postSnapshotChanges.length);
     });
 });
