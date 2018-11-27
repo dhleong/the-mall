@@ -1,3 +1,7 @@
+// for whatever reason, using `import` syntax on this module
+// returns undefined (or a non-function) when running in tests
+const memoize = require("fast-memoize");
+
 import { BaseSubContext, GlobalContextManager, withContext } from "./context";
 import { IRef, ISource, IStoreImpl, Params, SubFn, Subscription } from "./model";
 import { NO_VALUE, Valueless } from "./sub-values";
@@ -49,6 +53,13 @@ implements IRef<V>, ISource<V> {
 
     unsubscribe(onChange: (v: V) => any): void {
         this.subscribers.delete(onChange);
+
+        // if we go to zero subscribers, we should invalidate
+        // our cached value, since we're probably not being
+        // notified of changes if nobody is interested in us
+        if (!this.subscribers.size) {
+            this.lastValue = NO_VALUE;
+        }
     }
 
     toString(): string {
@@ -107,8 +118,9 @@ export function sub<V, P extends Params = []>(fn?: SubFn<V, P>): Subscription<V,
         return rootSub;
     }
 
-    // TODO memoize
-    return function subscription(...params: P) {
+    // TODO we should probably consider "releasing" References with no
+    // active subscriptions, to free up memory
+    return memoize(function subscription(...params: P) {
         return new Reference<V, P>(fn, params);
-    };
+    });
 }

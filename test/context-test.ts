@@ -27,7 +27,7 @@ beforeEach(function() {
 const rootSub = sub<IStoreState>();
 
 describe("Context", () => {
-    it.skip("should dispose subscriptions when unused", () => {
+    it("should dispose subscriptions when unused", () => {
         // in a context:
         const ctx = new TestableContext();
         ctx.setStore(store);
