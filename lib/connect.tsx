@@ -1,10 +1,9 @@
-import * as React from "react";
-import { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import { BaseSubContext, withContext } from "./context";
 import { storeContext } from "./provider";
 
-type Component<P> = React.ComponentClass<P> | React.SFC<P>;
+type Component<P> = React.ComponentClass<P> | React.FC<P>;
 
 class ComponentContext extends BaseSubContext {
 
@@ -22,7 +21,7 @@ class ComponentContext extends BaseSubContext {
   }
 }
 
-export function connect<P>(component: Component<P>): React.SFC<P> {
+export function connect<P>(component: Component<P>): React.FC<P> {
   const Base = component;
   const context = new ComponentContext();
 
@@ -35,6 +34,7 @@ export function connect<P>(component: Component<P>): React.SFC<P> {
   const hoc = function(props: P) {
     const [ , setState ] = useState(null);
     const store = useContext(storeContext);
+    if (!store) throw new Error("No Store provided in Context");
 
     context.setState = setState;
     context.setStore(store);
@@ -51,6 +51,7 @@ export function connect<P>(component: Component<P>): React.SFC<P> {
     return withContext(context, renderFn, props);
   };
 
-  hoc.displayName = `Connected${component.name || "Component"}`;
+  const compName = (component as any).name || component.displayName;
+  hoc.displayName = `Connected${compName || "Component"}`;
   return hoc;
 }

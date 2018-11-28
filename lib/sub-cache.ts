@@ -10,17 +10,17 @@ export interface ISubCache<V, P extends Params = []> {
     /**
      * Get a cached reference of the sub for the given params, if any exists
      */
-    get(params: P): IRef<V> | null;
+    get(params: P): IRef<V> | undefined;
 
     /**
      * Store a cached reference
      */
-    put(params: P, ref: IRef<V>);
+    put(params: P, ref: IRef<V>): void;
 
     /**
      * Delete the cached reference for the given sub
      */
-    delete(params: P);
+    delete(params: P): void;
 }
 
 class SimpleSubCache<V, P extends Params = []> implements ISubCache<V, P> {
@@ -31,7 +31,7 @@ class SimpleSubCache<V, P extends Params = []> implements ISubCache<V, P> {
         private toKey: ((params: P) => string) = JSON.stringify,
     ) {}
 
-    get(params: P): IRef<V> {
+    get(params: P): IRef<V> | undefined {
         return this.cache.get(this.toKey(params));
     }
 

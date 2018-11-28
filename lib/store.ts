@@ -27,7 +27,7 @@ export class Store<V> implements IStoreImpl<V> {
     private state: V;
     private ref = new Reference(() => this.state, []);
 
-    constructor(initialState?: V) {
+    constructor(initialState: V) {
         this.state = initialState;
         this.ref.name = "Reference(@Store)";
     }

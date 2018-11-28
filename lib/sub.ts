@@ -10,7 +10,7 @@ implements IRef<V>, ISource<V> {
 
     name: string | undefined;
 
-    onNoSubscribers: () => void;
+    onNoSubscribers: (() => void) | null = null;
 
     private lastValue: V | Valueless = NO_VALUE;
     private subscribers: Set<(v: V) => any> = new Set();

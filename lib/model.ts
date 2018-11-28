@@ -18,20 +18,20 @@ export function isSource(obj: any): obj is ISource<any> {
 }
 
 export interface ISubContext {
-    onEnter();
-    onExit();
+    onEnter(): void;
+    onExit(): void;
 
     /**
      * Dispose any active subscriptions
      */
-    dispose();
+    dispose(): void;
 
     /**
      * Define a child relationship; `this` Context now
      * depends on `parent`. This generally is only interesting
      * if `parent` is an `ISource`
      */
-    subscribeTo(parent: ISubContext);
+    subscribeTo(parent: ISubContext): void;
 
     /**
      * If any, returns a reference to the IStore this
@@ -42,8 +42,8 @@ export interface ISubContext {
 
 export interface IContextManager {
     peek(): ISubContext | null;
-    push(context: ISubContext);
-    pop(context: ISubContext);
+    push(context: ISubContext): void;
+    pop(context: ISubContext): void;
     store(): IStore<any> | never;
 }
 
@@ -53,7 +53,7 @@ export interface IStore<V> {
     getSnapshot(): V;
     loadSnapshot(snapshot: V): void;
 
-    dispatch(); // TODO
+    dispatch(): void; // TODO
 }
 
 export interface IStoreImpl<V> extends IStore<V>, IRef<V> {

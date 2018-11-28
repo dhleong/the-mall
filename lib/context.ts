@@ -39,7 +39,7 @@ export abstract class BaseSubContext implements ISubContext {
 
     private readonly dependencyValues = new Map<ISubContext, any>();
 
-    private myStore: IStore<any> | null;
+    private myStore: IStore<any> | null = null;
 
     onEnter() {
         // prepare for subscriptions (subscribeTo)
@@ -80,7 +80,7 @@ export abstract class BaseSubContext implements ISubContext {
             return;
         }
 
-        const onChange = v => {
+        const onChange = (v: any) => {
             // pass it on
             this.dependencyValues.set(parent, v);
 
@@ -93,14 +93,16 @@ export abstract class BaseSubContext implements ISubContext {
     }
 
     store(): IStore<any> {
-        return this.myStore;
+        const store = this.myStore;
+        if (!store) throw new Error(`No store set on ${this}`);
+        return store;
     }
 
     setStore(store: IStore<any>) {
         this.myStore = store;
     }
 
-    abstract onDependenciesChanged(dependencies: any);
+    abstract onDependenciesChanged(dependencies: any): void;
 
 }
 
@@ -113,9 +115,9 @@ export function withContext<V, P extends Params = []>(
 ): V {
 
     // tslint:disable-next-line
-    const givenStore = context["getContext"];
+    const isGivenStore = !!(context as any)["getContext"];
 
-    const subContext: ISubContext = givenStore
+    const subContext: ISubContext = isGivenStore
         ? (context as IStore<any>).getContext()
         : context as ISubContext;
 
@@ -131,7 +133,7 @@ export function withContext<V, P extends Params = []>(
     const result = fn(...params);
     GlobalContextManager.pop(subContext);
 
-    if (givenStore) {
+    if (isGivenStore) {
         // ?
         subContext.dispose();
     }
