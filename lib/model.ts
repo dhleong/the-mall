@@ -41,7 +41,7 @@ export interface ISubContext {
 }
 
 export interface IContextManager {
-    peek(): ISubContext;
+    peek(): ISubContext | null;
     push(context: ISubContext);
     pop(context: ISubContext);
     store(): IStore<any> | never;

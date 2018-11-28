@@ -51,6 +51,6 @@ export function connect<P>(component: Component<P>): React.SFC<P> {
     return withContext(context, renderFn, props);
   };
 
-  hoc.name = `Connected${component.name || "Component"}`;
+  hoc.displayName = `Connected${component.name || "Component"}`;
   return hoc;
 }
