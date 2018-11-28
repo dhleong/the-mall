@@ -26,8 +26,5 @@
   },
   "peerDependencies": {
     "react": "^16.6.3"
-  },
-  "dependencies": {
-    "fast-memoize": "^2.5.1"
   }
 }

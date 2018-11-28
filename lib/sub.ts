@@ -1,9 +1,6 @@
-// for whatever reason, using `import` syntax on this module
-// returns undefined (or a non-function) when running in tests
-const memoize = require("fast-memoize");
-
 import { BaseSubContext, GlobalContextManager, withContext } from "./context";
 import { IRef, ISource, IStoreImpl, Params, SubFn, Subscription } from "./model";
+import { createCacheFor } from "./sub-cache";
 import { NO_VALUE, Valueless } from "./sub-values";
 import { areSame } from "./util";
 
@@ -12,6 +9,8 @@ extends BaseSubContext
 implements IRef<V>, ISource<V> {
 
     name: string | undefined;
+
+    onNoSubscribers: () => void;
 
     private lastValue: V | Valueless = NO_VALUE;
     private subscribers: Set<(v: V) => any> = new Set();
@@ -59,6 +58,9 @@ implements IRef<V>, ISource<V> {
         // notified of changes if nobody is interested in us
         if (!this.subscribers.size) {
             this.lastValue = NO_VALUE;
+
+            const cb = this.onNoSubscribers;
+            if (cb) cb();
         }
     }
 
@@ -118,9 +120,20 @@ export function sub<V, P extends Params = []>(fn?: SubFn<V, P>): Subscription<V,
         return rootSub;
     }
 
-    // TODO we should probably consider "releasing" References with no
-    // active subscriptions, to free up memory
-    return memoize(function subscription(...params: P) {
-        return new Reference<V, P>(fn, params);
-    });
+    const cache = createCacheFor(fn);
+
+    return function subscription(...params: P) {
+        const cached = cache.get(params);
+        if (cached) return cached;
+
+        const ref = new Reference<V, P>(fn, params);
+        cache.put(params, ref);
+
+        // if the Reference ever ends up with zero active subscriptions, we
+        // should be good citizens and de-cache it to free up memory
+        ref.onNoSubscribers = () => {
+            cache.delete(params);
+        };
+        return ref;
+    };
 }
