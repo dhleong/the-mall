@@ -1,7 +1,7 @@
 import * as chai from "chai";
 
-import { Store } from "../lib/store";
-import { sub } from "../lib/sub";
+import { Store } from "../src/store";
+import { sub } from "../src/sub";
 
 import { derefWith, IStoreState, newState } from "./test-util";
 

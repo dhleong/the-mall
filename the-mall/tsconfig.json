@@ -19,9 +19,12 @@
             }
         ],
         "declaration": true,
-        "noUnusedLocals": true
+        "noUnusedLocals": true,
+        "types": [
+            "chai", "mocha"
+        ]
     },
     "include": [
-        "lib"
+        "src", "test"
     ]
 }

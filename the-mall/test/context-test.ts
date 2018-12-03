@@ -1,7 +1,7 @@
 import * as chai from "chai";
-import { sub } from "../lib";
-import { BaseSubContext, withContext } from "../lib/context";
-import { Store } from "../lib/store";
+import { sub } from "../src";
+import { BaseSubContext, withContext } from "../src/context";
+import { Store } from "../src/store";
 
 import { IStoreState, newState } from "./test-util";
 
@@ -33,7 +33,9 @@ describe("Context", () => {
         ctx.setStore(store);
 
         const ships = sub(function _ships() { return rootSub().deref().ships; });
-        const shipById = sub(function _byId(id: string) { return ships().deref()[id]; });
+        const shipById = sub(function _byId(id: string) {
+            return ships().deref()[id];
+        });
 
         function render() {
             // this creates a dependency on ships()

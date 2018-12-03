@@ -1,5 +1,5 @@
-import { withContext } from "../lib";
-import { IRef, IStore } from "../lib/model";
+import { withContext } from "../src";
+import { IRef, IStore } from "../src/model";
 
 export function derefWith<V>(
     store: IStore<any>,
@@ -9,7 +9,7 @@ export function derefWith<V>(
 }
 
 export interface IStoreState {
-    ships?: {};
+    ships: {[key: string]: any};
     pilots?: {};
 }
 

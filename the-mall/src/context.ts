@@ -92,10 +92,8 @@ export abstract class BaseSubContext implements ISubContext {
         this.subscriptions.set(parent, onChange);
     }
 
-    store(): IStore<any> {
-        const store = this.myStore;
-        if (!store) throw new Error(`No store set on ${this}`);
-        return store;
+    store(): IStore<any> | null {
+        return this.myStore;
     }
 
     setStore(store: IStore<any>) {

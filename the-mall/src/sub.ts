@@ -114,7 +114,9 @@ function rootSub<V>(): IRef<V> {
 /**
  * If `fn` is omitted, this returns the full root state
  */
-export function sub<V, P extends Params = []>(fn?: SubFn<V, P>): Subscription<V, P> {
+export function sub<V, P extends Params = []>(
+    fn?: SubFn<V, P>,
+): Subscription<V, P> {
     if (!fn) {
         // root subscription
         return rootSub;

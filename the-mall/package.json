@@ -1,0 +1,19 @@
+{
+  "name": "the-mall",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "lint": "tslint --project tsconfig.json",
+    "build": "tsc -p .",
+    "build:watch": "tsc -p . --watch",
+    "test": "mocha -r ts-node/register 'test/**/*.ts'",
+    "test:watch": "mocha --inspect --watch --watch-extensions=ts -r ts-node/register 'test/**/*.ts'"
+  },
+  "author": "",
+  "license": "ISC",
+  "peerDependencies": {
+    "react": "^16.7.0-alpha.2"
+  }
+}
