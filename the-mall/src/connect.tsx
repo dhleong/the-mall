@@ -25,11 +25,13 @@ export function connect<P>(component: Component<P>): React.FC<P> {
   const Base = component;
   const context = new ComponentContext();
 
-  const renderFn = function render(props: P) {
-    return (
-      <Base {...props} />
-    );
-  };
+  const renderFn = component.prototype.render
+    ? function render(props: P) {
+        return (
+          <Base {...props} />
+        );
+      }
+    : Base as React.FC<P>;
 
   const hoc = function(props: P) {
     const [ , setState ] = useState(null);

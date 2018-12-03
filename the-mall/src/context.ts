@@ -26,7 +26,8 @@ class GlobalContextManagerImpl implements IContextManager {
             if (s) return s;
         }
 
-        throw new Error("No store in any registered context");
+        // TODO any way we can detect if we're not in a connected component?
+        throw new Error("No store in any registered context. Make sure your component is wrapped in connect()");
     }
 }
 
@@ -111,7 +112,6 @@ export function withContext<V, P extends Params = []>(
     fn: SubFn<V, P>,
     ... params: P
 ): V {
-
     // tslint:disable-next-line
     const isGivenStore = !!(context as any)["getContext"];
 
@@ -119,7 +119,6 @@ export function withContext<V, P extends Params = []>(
         ? (context as IStore<any>).getContext()
         : context as ISubContext;
 
-    // console.log(`withContext(${context}): ${fn}`);
     const current = GlobalContextManager.peek();
     if (current) {
         // the Context stack is depth-first, so the "current"
