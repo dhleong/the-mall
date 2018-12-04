@@ -5,3 +5,6 @@ export { useDispatch } from "./hooks";
 export { StoreProvider, storeContext } from "./provider";
 export { sub } from "./sub";
 export { Store } from "./store";
+
+import * as events from "./events";
+export { events };

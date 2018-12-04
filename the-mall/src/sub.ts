@@ -27,8 +27,12 @@ implements IRef<V>, ISource<V> {
             return this.forceDeref();
         }
 
-        // return the cached value
-        return this.lastValue;
+        // FIXME: caching is good, but how can we signal
+        // to contexts that we're still interested in
+        // our dependencies?
+        return this.forceDeref();
+        // // return the cached value
+        // return this.lastValue;
     }
 
     onDependenciesChanged(dependencies: any) {

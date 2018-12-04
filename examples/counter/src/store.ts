@@ -1,6 +1,6 @@
 import { Store, sub } from "the-mall";
 
-interface ICounterState {
+export interface ICounterState {
     count: number;
 }
 

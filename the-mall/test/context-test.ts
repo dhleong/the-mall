@@ -1,5 +1,5 @@
 import * as chai from "chai";
-import { sub } from "../src";
+import { events, sub } from "../src";
 import { BaseSubContext, withContext } from "../src/context";
 import { Store } from "../src/store";
 
@@ -25,6 +25,16 @@ beforeEach(function() {
 });
 
 const rootSub = sub<IStoreState>();
+
+const setShip = events.store((old: IStoreState, name: string, score: number) => {
+    return {
+        ...old,
+        ships: {
+            ...(old.ships),
+            [name]: score,
+        },
+    };
+});
 
 describe("Context", () => {
     it("should dispose subscriptions when unused", () => {
@@ -54,7 +64,8 @@ describe("Context", () => {
         ctx.dependencyChanges.should.be.empty;
 
         // changing the Store triggers another pass
-        store.loadSnapshot({ ships: {serenity: 9001}});
+        // store.loadSnapshot({ ships: {serenity: 9001}});
+        store.dispatchSync(setShip("serenity", 9001));
         const postSnapshotChanges = [... ctx.dependencyChanges];
         postSnapshotChanges.should.have.lengthOf(1);
 
@@ -65,7 +76,8 @@ describe("Context", () => {
         // the ships() sub did not change, and the previous
         // render should have unsubscribed from shipById, so
         // this change should not trigger another render
-        store.loadSnapshot({ ships: {serenity: 9002}});
+        // store.loadSnapshot({ ships: {serenity: 9002}});
+        store.dispatchSync(setShip("serenity", 9002));
         ctx.dependencyChanges.should.have.lengthOf(postSnapshotChanges.length);
     });
 });

@@ -47,13 +47,32 @@ export interface IContextManager {
     store(): IStore<any> | never;
 }
 
+export type StoreEvent<T> = (old: T, store: IStore<T>) => T;
+
+export type StoreEventFn<T> = (old: T) => T;
+export type StorePropsEventFn<T, P extends Params> = (old: T, ...props: P) => T;
+
+export interface IDispatchFn<StoreState> {
+    (event: StoreEvent<StoreState>): void;
+}
+
 export interface IStore<V> {
+    /**
+     * Dispatch a StoreEvent, created by one of the factories in the
+     * `events` module.
+     */
+    dispatch: IDispatchFn<V>;
+
+    /**
+     * Dispatch a StoreEvent *synchronously*, created by one of the
+     * factories in the `events` module.
+     */
+    dispatchSync: IDispatchFn<V>;
+
     getContext(): ISubContext;
 
     getSnapshot(): V;
     loadSnapshot(snapshot: V): void;
-
-    dispatch(): void; // TODO
 }
 
 export interface IStoreImpl<V> extends IStore<V>, IRef<V> {
