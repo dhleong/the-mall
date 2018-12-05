@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 
 import { BaseSubContext, withContext } from "./context";
+import { IStore } from "./model";
 import { storeContext } from "./provider";
 
 type Component<P> = React.ComponentClass<P> | React.FC<P>;
@@ -59,23 +60,58 @@ class ComponentContext extends BaseSubContext {
   }
 }
 
-export function connect<P>(component: Component<P>): React.FC<P> {
-  const Base = component;
+function nameFrom<P>(
+  Base: Component<P>,
+  hoc: Component<P>,
+  context: ComponentContext,
+) {
+  const compName = (Base as any).name || Base.displayName;
+  hoc.displayName = `Connected${compName || "Component"}`;
+  context.displayName = hoc.displayName + ".Context";
+}
+
+function connectClass<P>(Base: React.ComponentClass<P>): React.ComponentClass<P> {
   const context = new ComponentContext();
 
-  // FIXME unfortunately, we probably need an actual HOC
-  // if we're wrapping a class component
-  // const renderFn = component.prototype.render
-  //   ? function render(props: P) {
-  //       return (
-  //         <Base {...props} />
-  //       );
-  //     }
-  //   : Base as React.FC<P>;
+  const hoc = class extends Base {
+    static contextType = storeContext;
+
+    baseRender = () => super.render();
+
+    componentDidMount() {
+      context.setState = (state) => {
+        this.setState({
+          __mall: state,
+        });
+      };
+    }
+
+    componentWillUnmount() {
+      context.dispose();
+    }
+
+    render() {
+      const store = this.context as IStore<any>;
+      if (!store) throw new Error("No Store provided in Context");
+      context.setStore(store);
+
+      return withContext(context, this.baseRender);
+    }
+  };
+
+  nameFrom(Base, hoc, context);
+  return hoc;
+}
+
+export function connect<P>(component: Component<P>): Component<P> {
+  // unfortunately, we probably an actual HOC
+  // if we're wrapping a class component:
   if (component.prototype.render) {
-    throw new Error("Class Components are not yet supported");
+    return connectClass(component as React.ComponentClass<P>);
   }
-  const renderFn = Base as React.FC<P>;
+
+  const context = new ComponentContext();
+  const renderFn = component as React.FC<P>;
 
   const hoc = function(props: P) {
     const [ , setState ] = useState(null);
@@ -102,8 +138,6 @@ export function connect<P>(component: Component<P>): React.FC<P> {
     return context.performRender(renderFn, props);
   };
 
-  const compName = (component as any).name || component.displayName;
-  hoc.displayName = `Connected${compName || "Component"}`;
-  context.displayName = hoc.displayName + ".Context";
+  nameFrom(component, hoc, context);
   return hoc;
 }

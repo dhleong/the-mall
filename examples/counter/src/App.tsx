@@ -11,17 +11,17 @@ const countSub = sub(function countSub() {
   return root.count;
 });
 
-// class _CountComponent extends React.Component {
-//   render() {
-//     const count = countSub().deref();
-//     return (
-//       <p>
-//         Count in Component = {count}
-//       </p>
-//     );
-//   }
-// }
-// const CountComponent = connect(_CountComponent);
+class _CountComponent extends React.Component {
+  render() {
+    const count = countSub().deref();
+    return (
+      <p>
+        Count in Component = {count}
+      </p>
+    );
+  }
+}
+const CountComponent = connect(_CountComponent);
 
 const _CountFunction = () => (
   <p>
@@ -48,7 +48,7 @@ export default function App() {
           Edit <code>src/App.tsx</code> and save to reload.
         </p>
         <CountFunction />
-        {/* <CountComponent /> */}
+        <CountComponent />
         <input type="button"
           onClick={() => dispatch(increment())}
           value="Increment"
