@@ -49,9 +49,8 @@ implements IRef<V>, ISource<V> {
             this.subscribers.forEach(onChanged => {
                 onChanged(next);
             });
+            this.dispatchChangesBatched();
         }
-
-        // TODO notify *no* change, so we don't have to debounce?
     }
 
     subscribe(onChange: (v: V) => any): void {

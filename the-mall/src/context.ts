@@ -1,4 +1,4 @@
-import { IContextManager, ISource, isSource, IStore, ISubContext, Params, SubFn } from "./model";
+import { IChangeBatcher, IContextManager, ISource, isSource, IStore, ISubContext, Params, SubFn } from "./model";
 
 class GlobalContextManagerImpl implements IContextManager {
 
@@ -20,6 +20,11 @@ class GlobalContextManagerImpl implements IContextManager {
         this.contexts.pop();
     }
 
+    root(): ISubContext | null {
+        if (!this.contexts.length) return null;
+        return this.contexts[0];
+    }
+
     store(): IStore<any> {
         for (let i = this.contexts.length - 1; i >= 0; --i) {
             const s = this.contexts[i].store();
@@ -33,12 +38,19 @@ class GlobalContextManagerImpl implements IContextManager {
 
 export const GlobalContextManager = new GlobalContextManagerImpl();
 
-export abstract class BaseSubContext implements ISubContext {
+export abstract class BaseSubContext implements ISubContext, IChangeBatcher {
 
     private readonly subscriptions: Map<ISource<any>, (v: any) => any> = new Map();
     private readonly oldSubscriptions: Map<ISource<any>, (v: any) => any> = new Map();
 
+    // FIXME: we probably don't need to maintain this map—it's only used in
+    // ComponentContext with setState to trigger a render. Since we *know*
+    // when the values have actually changed, though, we ought to be able to
+    // force React to re-render without having to keep all these values and
+    // ask React to diff them *again*
     private readonly dependencyValues = new Map<ISubContext, any>();
+
+    private readonly changeBatchers: Set<IChangeBatcher> = new Set();
 
     private myStore: IStore<any> | null = null;
 
@@ -86,8 +98,22 @@ export abstract class BaseSubContext implements ISubContext {
             // pass it on
             this.dependencyValues.set(parent, v);
 
-            // TODO debounce changed notification
-            this.onDependenciesChanged(this.dependencyValues);
+            // NOTE: if we have more dependencies than this one, we register
+            // with the root context that we're waiting; once the root
+            // context that originally initiated the change has finished
+            // notifying its dependents, it will sweep through and notify all
+            // "pending" contexts
+            if (this.subscriptions.size <= 1) {
+                // easy case; dispatch immediately
+                this.notifyChangesBatched();
+            } else {
+                // TODO a small optimization may be to detect if we eventually
+                // receive changes from all our dependencies and cancel our
+                // request for changes. Not sure if it would be significant...
+                const rootContext = GlobalContextManager.root();
+                if (rootContext === null) throw new Error("onChange without context");
+                rootContext.requestBatchedChanges(this);
+            }
         };
         parent.subscribe(onChange);
 
@@ -102,7 +128,42 @@ export abstract class BaseSubContext implements ISubContext {
         this.myStore = store;
     }
 
+    /**
+     * Note: if you dispatch any changes to dependents from
+     * this method, you MUST call [dispatchChangesBatched]
+     */
     abstract onDependenciesChanged(dependencies: any): void;
+
+    requestBatchedChanges(recipient: IChangeBatcher) {
+        if (this === recipient) {
+            // mostly a concern for a root context, like the Store's ref
+            return;
+        }
+
+        this.changeBatchers.add(recipient);
+    }
+
+    notifyChangesBatched() {
+        this.onDependenciesChanged(this.dependencyValues);
+        this.dispatchChangesBatched();
+    }
+
+    protected dispatchChangesBatched() {
+        // NOTE: this needs to be a loop, since dependents of
+        // batchers may themselves request batching if some of
+        // their dependencies were not fulfilled
+
+        // is it efficient enough to just keep making Sets like this?
+        let workspace: Set<IChangeBatcher>;
+        do {
+            workspace = new Set(this.changeBatchers);
+            this.changeBatchers.clear();
+
+            workspace.forEach(target => {
+                target.notifyChangesBatched();
+            });
+        } while (this.changeBatchers.size);
+    }
 }
 
 export function withContext<V, P extends Params = []>(store: IStore<any>, fn: SubFn<V, P>, ... params: P): V;

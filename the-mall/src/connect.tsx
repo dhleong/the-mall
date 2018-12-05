@@ -23,6 +23,7 @@ class ComponentContext extends BaseSubContext {
     }
 
     setState(dependencies);
+    this.dispatchChangesBatched();
   }
 
   onEnter() {

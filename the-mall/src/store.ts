@@ -64,6 +64,7 @@ export class Store<V> implements IStoreImpl<V> {
     constructor(initialState: V, opts?: StoreOptions<V>) {
         this.state = initialState;
         this.ref.name = "Reference(@Store)";
+        this.ref.setStore(this);
 
         if (opts && opts.deferEvents) {
             this.deferEvents = opts.deferEvents;
@@ -168,7 +169,7 @@ export class Store<V> implements IStoreImpl<V> {
 
     private dispatchStateChanged(providedSnapshot?: V) {
         const snapshot = providedSnapshot || this.state;
-        withContext(this, (state) => {
+        withContext(this.ref, (state) => {
             this.ref.onDependenciesChanged(state);
         }, snapshot);
     }

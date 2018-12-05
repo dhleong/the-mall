@@ -38,6 +38,22 @@ export interface ISubContext {
      * context is bound to
      */
     store(): IStore<any> | null;
+
+    /**
+     * @see IChangeBatcher
+     */
+    requestBatchedChanges(batcher: IChangeBatcher): void;
+}
+
+/**
+ * IChangeBatchers can register with a parent [ISubContext]
+ * to be notified when all change events have been delivered.
+ * This is a useful optimization for a [ISubContext] with
+ * multiple dependencies to only notify its dependencies
+ * one time
+ */
+export interface IChangeBatcher {
+    notifyChangesBatched(): void;
 }
 
 export interface IContextManager {

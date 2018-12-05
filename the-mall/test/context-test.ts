@@ -12,6 +12,7 @@ class TestableContext extends BaseSubContext {
 
     onDependenciesChanged(dependencies: any) {
         this.dependencyChanges.push(dependencies);
+        this.dispatchChangesBatched();
     }
 
     toString() {
@@ -66,14 +67,13 @@ describe("Context", () => {
         // no changes yet
         ctx.dependencyChanges.should.be.empty;
 
-        // changing the Store triggers another pass
+        // changing the Store triggers a pass
         store.dispatchSync(setShip("serenity", 9001));
 
-        // FIXME: we depend on *two* subs, shipsCount() and shipsById()
-        // future work should debounce the events dispatch so the context
-        // only sees at most one onDependenciesChanged per event
+        // NOTE: we depend on *two* subs, shipsCount() and shipsById()
+        // but we should "debounce" to get only a single notification
         const postEventChanges = [... ctx.dependencyChanges];
-        postEventChanges.should.have.lengthOf(2);
+        postEventChanges.should.have.lengthOf(1);
 
         // on pass 2, references that were not deref'd
         //  should get unsubscribed from
@@ -88,5 +88,50 @@ describe("Context", () => {
         // the shipsCount() sub should now change:
         store.dispatchSync(setShip("firefly", 9003));
         ctx.dependencyChanges.should.have.lengthOf(1 + postEventChanges.length);
+    });
+
+    it("should still get notified with deep sub hierarchy", () => {
+        // in a context:
+        const ctx = new TestableContext();
+        ctx.setStore(store);
+
+        // level 1
+        const ships = sub(() => rootSub().deref().ships);
+        const ships2 = sub(() => rootSub().deref().ships);
+        const pilots = sub(() => rootSub().deref().pilots);
+        const pilots2 = sub(() => rootSub().deref().pilots);
+
+        // level2
+        const shipsCount = sub(() => {
+            pilots().deref(); // depend on it for the graph
+            return Object.keys(ships().deref()).length;
+        });
+        const ships2Count = sub(() => {
+            pilots2().deref(); // depend on it for the graph
+            return Object.keys(ships2().deref()).length;
+        });
+        const pilotsCount = sub(() => Object.keys(pilots().deref() || {}).length);
+
+        // level 3
+        const pilotsCountX2 = sub(() => 2 * pilotsCount().deref());
+
+        function render() {
+            shipsCount().deref();
+            ships2Count().deref();
+            pilotsCountX2().deref();
+        }
+
+        // on pass 1, references that were deref'd
+        //  get subscribed to
+        withContext(ctx, render);
+
+        // no changes yet
+        ctx.dependencyChanges.should.be.empty;
+
+        // changing the Store triggers a pass
+        store.dispatchSync(setShip("serenity", 9001));
+
+        // we should get notified exactly once!
+        ctx.dependencyChanges.should.have.lengthOf(1);
     });
 });
