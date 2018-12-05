@@ -27,12 +27,16 @@ implements IRef<V>, ISource<V> {
             return this.forceDeref();
         }
 
-        // FIXME: caching is good, but how can we signal
-        // to contexts that we're still interested in
-        // our dependencies?
-        return this.forceDeref();
-        // // return the cached value
-        // return this.lastValue;
+        // we have a valid cached value, but since we're not actually
+        // deref'ing our provider function, we need to manually signal to our
+        // containing context that it should still be interested in us!
+        const parentContext = GlobalContextManager.peek();
+        if (parentContext) {
+            parentContext.subscribeTo(this);
+        }
+
+        // return the cached value
+        return this.lastValue;
     }
 
     onDependenciesChanged(dependencies: any) {

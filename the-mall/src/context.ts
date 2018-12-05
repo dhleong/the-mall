@@ -78,6 +78,7 @@ export abstract class BaseSubContext implements ISubContext {
             // since we visited the subscription in this pass,
             // we want to keep it; remove from oldSubscriptions
             this.oldSubscriptions.delete(parent);
+            this.dependencyValues.delete(parent);
             return;
         }
 
@@ -102,7 +103,6 @@ export abstract class BaseSubContext implements ISubContext {
     }
 
     abstract onDependenciesChanged(dependencies: any): void;
-
 }
 
 export function withContext<V, P extends Params = []>(store: IStore<any>, fn: SubFn<V, P>, ... params: P): V;

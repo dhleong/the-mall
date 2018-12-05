@@ -42,6 +42,9 @@ describe("Context", () => {
         const ctx = new TestableContext();
         ctx.setStore(store);
 
+        const shipsCount = sub(function _shipsCount() {
+            return Object.keys(rootSub().deref().ships).length;
+        });
         const ships = sub(function _ships() { return rootSub().deref().ships; });
         const shipById = sub(function _byId(id: string) {
             return ships().deref()[id];
@@ -49,8 +52,8 @@ describe("Context", () => {
 
         function render() {
             // this creates a dependency on ships()
-            const all = ships().deref();
-            if (!Object.keys(all).length) {
+            const count = shipsCount().deref();
+            if (count === 0) {
                 // this doesn't make much sense, but...
                 shipById("serenity").deref();
             }
@@ -64,20 +67,26 @@ describe("Context", () => {
         ctx.dependencyChanges.should.be.empty;
 
         // changing the Store triggers another pass
-        // store.loadSnapshot({ ships: {serenity: 9001}});
         store.dispatchSync(setShip("serenity", 9001));
-        const postSnapshotChanges = [... ctx.dependencyChanges];
-        postSnapshotChanges.should.have.lengthOf(1);
+
+        // FIXME: we depend on *two* subs, shipsCount() and shipsById()
+        // future work should debounce the events dispatch so the context
+        // only sees at most one onDependenciesChanged per event
+        const postEventChanges = [... ctx.dependencyChanges];
+        postEventChanges.should.have.lengthOf(2);
 
         // on pass 2, references that were not deref'd
         //  should get unsubscribed from
         withContext(ctx, render);
 
-        // the ships() sub did not change, and the previous
+        // the shipsCount() sub will not change here, and the previous
         // render should have unsubscribed from shipById, so
         // this change should not trigger another render
-        // store.loadSnapshot({ ships: {serenity: 9002}});
         store.dispatchSync(setShip("serenity", 9002));
-        ctx.dependencyChanges.should.have.lengthOf(postSnapshotChanges.length);
+        ctx.dependencyChanges.should.have.lengthOf(postEventChanges.length);
+
+        // the shipsCount() sub should now change:
+        store.dispatchSync(setShip("firefly", 9003));
+        ctx.dependencyChanges.should.have.lengthOf(1 + postEventChanges.length);
     });
 });
