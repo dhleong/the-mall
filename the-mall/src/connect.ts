@@ -8,137 +8,137 @@ type Component<P> = React.ComponentClass<P> | React.FC<P>;
 
 class ComponentContext extends BaseSubContext {
 
-  setState?: (state: any) => any;
+    setState?: (state: any) => any;
 
-  displayName: string = "ComponentContext";
+    displayName: string = "ComponentContext";
 
-  private inRender = false;
+    private inRender = false;
 
-  onDependenciesChanged(dependencies: any) {
-    const setState = this.setState;
-    if (!setState) {
-      throw new Error(
-        "Illegal State: no setState method attached but received onDependenciesChanged",
-      );
+    onDependenciesChanged(dependencies: any) {
+        const setState = this.setState;
+        if (!setState) {
+            throw new Error(
+                "Illegal State: no setState method attached but received onDependenciesChanged",
+            );
+        }
+
+        setState(dependencies);
+        this.dispatchChangesBatched();
     }
 
-    setState(dependencies);
-    this.dispatchChangesBatched();
-  }
-
-  onEnter() {
-    // see onEnter
-    if (this.inRender) {
-      super.onEnter();
+    onEnter() {
+        // see onEnter
+        if (this.inRender) {
+            super.onEnter();
+        }
     }
-  }
 
-  onExit() {
-    // NOTE: the normal behavior here is to unsubscribe from
-    // subscriptions we didn't visit between onEnter and now,
-    // but when events are dispatched (IE: onDependenciesChanged)
-    // we don't actually call the render function, so we don't
-    // deref any references; instead, we wait until the render
-    // happens (see performRender), during which we will do
-    // the needful.
-    if (this.inRender) {
-      super.onExit();
+    onExit() {
+        // NOTE: the normal behavior here is to unsubscribe from
+        // subscriptions we didn't visit between onEnter and now,
+        // but when events are dispatched (IE: onDependenciesChanged)
+        // we don't actually call the render function, so we don't
+        // deref any references; instead, we wait until the render
+        // happens (see performRender), during which we will do
+        // the needful.
+        if (this.inRender) {
+            super.onExit();
+        }
     }
-  }
 
-  performRender<P>(
-    renderFn: React.FC<P>,
-    props: P,
-  ): React.ReactElement<any> | null {
-    this.inRender = true;
-    const result = withContext(this, renderFn, props);
-    this.inRender = false;
-    return result;
-  }
+    performRender<P>(
+        renderFn: React.FC<P>,
+        props: P,
+    ): React.ReactElement<any> | null {
+        this.inRender = true;
+        const result = withContext(this, renderFn, props);
+        this.inRender = false;
+        return result;
+    }
 
-  toString(): string {
-    return this.displayName;
-  }
+    toString(): string {
+        return this.displayName;
+    }
 }
 
 function nameFrom<P>(
-  Base: Component<P>,
-  hoc: Component<P>,
-  context: ComponentContext,
+    Base: Component<P>,
+    hoc: Component<P>,
+    context: ComponentContext,
 ) {
-  const compName = (Base as any).name || Base.displayName;
-  hoc.displayName = `Connected${compName || "Component"}`;
-  context.displayName = hoc.displayName + ".Context";
+    const compName = (Base as any).name || Base.displayName;
+    hoc.displayName = `Connected${compName || "Component"}`;
+    context.displayName = hoc.displayName + ".Context";
 }
 
 function connectClass<P>(Base: React.ComponentClass<P>): React.ComponentClass<P> {
-  const context = new ComponentContext();
+    const context = new ComponentContext();
 
-  const hoc = class extends Base {
-    static contextType = storeContext;
+    const hoc = class extends Base {
+        static contextType = storeContext;
 
-    baseRender = () => super.render();
+        baseRender = () => super.render();
 
-    componentDidMount() {
-      context.setState = (state) => {
-        this.setState({
-          __mall: state,
-        });
-      };
-    }
+        componentDidMount() {
+            context.setState = (state) => {
+                this.setState({
+                    __mall: state,
+                });
+            };
+        }
 
-    componentWillUnmount() {
-      context.dispose();
-    }
+        componentWillUnmount() {
+            context.dispose();
+        }
 
-    render() {
-      const store = this.context as IStore<any>;
-      if (!store) throw new Error("No Store provided in Context");
-      context.setStore(store);
+        render() {
+            const store = this.context as IStore<any>;
+            if (!store) throw new Error("No Store provided in Context");
+            context.setStore(store);
 
-      return withContext(context, this.baseRender);
-    }
-  };
+            return withContext(context, this.baseRender);
+        }
+    };
 
-  nameFrom(Base, hoc, context);
-  return hoc;
+    nameFrom(Base, hoc, context);
+    return hoc;
 }
 
 export function connect<P>(component: Component<P>): Component<P> {
-  // unfortunately, we probably an actual HOC
-  // if we're wrapping a class component:
-  if (component.prototype.render) {
-    return connectClass(component as React.ComponentClass<P>);
-  }
+    // unfortunately, we probably an actual HOC
+    // if we're wrapping a class component:
+    if (component.prototype.render) {
+        return connectClass(component as React.ComponentClass<P>);
+    }
 
-  const context = new ComponentContext();
-  const renderFn = component as React.FC<P>;
+    const context = new ComponentContext();
+    const renderFn = component as React.FC<P>;
 
-  const hoc = function(props: P) {
-    const [ , setState ] = useState(null);
-    const store = useContext(storeContext);
-    if (!store) throw new Error("No Store provided in Context");
+    const hoc = function(props: P) {
+        const [ , setState ] = useState(null);
+        const store = useContext(storeContext);
+        if (!store) throw new Error("No Store provided in Context");
 
-    context.setState = setState;
-    context.setStore(store);
+        context.setState = setState;
+        context.setStore(store);
 
-    useEffect(() => {
-      // we just useEffect so we can clean up nicely
-      // when unmounted:
-      return () => {
-        // on unmount, unsubscribe from context
-        context.dispose();
-      };
+        useEffect(() => {
+            // we just useEffect so we can clean up nicely
+            // when unmounted:
+            return () => {
+                // on unmount, unsubscribe from context
+                context.dispose();
+            };
 
-      // note [] so we don't get called constantly
-      // this effect has no dependencies other than
-      // the lifecycle of the component, so using []
-      // means "don't call again until we're unmounted"
-    }, []);
+            // note [] so we don't get called constantly
+            // this effect has no dependencies other than
+            // the lifecycle of the component, so using []
+            // means "don't call again until we're unmounted"
+            }, []);
 
-    return context.performRender(renderFn, props);
-  };
+        return context.performRender(renderFn, props);
+    };
 
-  nameFrom(component, hoc, context);
-  return hoc;
+    nameFrom(component, hoc, context);
+    return hoc;
 }
