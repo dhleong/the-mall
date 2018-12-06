@@ -13,8 +13,9 @@ class ComponentContext extends BaseSubContext {
     displayName: string = "ComponentContext";
 
     private inRender = false;
+    private lastState = 0;
 
-    onDependenciesChanged(dependencies: any) {
+    onDependenciesChanged() {
         const setState = this.setState;
         if (!setState) {
             throw new Error(
@@ -22,7 +23,9 @@ class ComponentContext extends BaseSubContext {
             );
         }
 
-        setState(dependencies);
+        const nextState = (this.lastState + 1) % 100;
+        this.lastState = nextState;
+        setState(nextState);
         this.dispatchChangesBatched();
     }
 

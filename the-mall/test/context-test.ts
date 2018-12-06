@@ -8,10 +8,10 @@ import { IStoreState, newState } from "./test-util";
 chai.should();
 
 class TestableContext extends BaseSubContext {
-    readonly dependencyChanges: any[] = [];
+    dependencyChanges = 0;
 
-    onDependenciesChanged(dependencies: any) {
-        this.dependencyChanges.push(dependencies);
+    onDependenciesChanged() {
+        ++this.dependencyChanges;
         this.dispatchChangesBatched();
     }
 
@@ -65,15 +65,15 @@ describe("Context", () => {
         withContext(ctx, render);
 
         // no changes yet
-        ctx.dependencyChanges.should.be.empty;
+        ctx.dependencyChanges.should.equal(0);
 
         // changing the Store triggers a pass
         store.dispatchSync(setShip("serenity", 9001));
 
         // NOTE: we depend on *two* subs, shipsCount() and shipsById()
         // but we should "debounce" to get only a single notification
-        const postEventChanges = [... ctx.dependencyChanges];
-        postEventChanges.should.have.lengthOf(1);
+        const postEventChanges = ctx.dependencyChanges;
+        postEventChanges.should.equal(1);
 
         // on pass 2, references that were not deref'd
         //  should get unsubscribed from
@@ -83,11 +83,11 @@ describe("Context", () => {
         // render should have unsubscribed from shipById, so
         // this change should not trigger another render
         store.dispatchSync(setShip("serenity", 9002));
-        ctx.dependencyChanges.should.have.lengthOf(postEventChanges.length);
+        ctx.dependencyChanges.should.equal(postEventChanges);
 
         // the shipsCount() sub should now change:
         store.dispatchSync(setShip("firefly", 9003));
-        ctx.dependencyChanges.should.have.lengthOf(1 + postEventChanges.length);
+        ctx.dependencyChanges.should.equal(1 + postEventChanges);
     });
 
     it("should still get notified with deep sub hierarchy", () => {
@@ -126,12 +126,12 @@ describe("Context", () => {
         withContext(ctx, render);
 
         // no changes yet
-        ctx.dependencyChanges.should.be.empty;
+        ctx.dependencyChanges.should.equal(0);
 
         // changing the Store triggers a pass
         store.dispatchSync(setShip("serenity", 9001));
 
         // we should get notified exactly once!
-        ctx.dependencyChanges.should.have.lengthOf(1);
+        ctx.dependencyChanges.should.equal(1);
     });
 });

@@ -43,13 +43,6 @@ export abstract class BaseSubContext implements ISubContext, IChangeBatcher {
     private readonly subscriptions: Map<ISource<any>, (v: any) => any> = new Map();
     private readonly oldSubscriptions: Map<ISource<any>, (v: any) => any> = new Map();
 
-    // FIXME: we probably don't need to maintain this map—it's only used in
-    // ComponentContext with setState to trigger a render. Since we *know*
-    // when the values have actually changed, though, we ought to be able to
-    // force React to re-render without having to keep all these values and
-    // ask React to diff them *again*
-    private readonly dependencyValues = new Map<ISubContext, any>();
-
     private readonly changeBatchers: Set<IChangeBatcher> = new Set();
 
     private myStore: IStore<any> | null = null;
@@ -90,13 +83,11 @@ export abstract class BaseSubContext implements ISubContext, IChangeBatcher {
             // since we visited the subscription in this pass,
             // we want to keep it; remove from oldSubscriptions
             this.oldSubscriptions.delete(parent);
-            this.dependencyValues.delete(parent);
             return;
         }
 
         const onChange = (v: any) => {
             // pass it on
-            this.dependencyValues.set(parent, v);
 
             // NOTE: if we have more dependencies than this one, we register
             // with the root context that we're waiting; once the root
@@ -132,7 +123,7 @@ export abstract class BaseSubContext implements ISubContext, IChangeBatcher {
      * Note: if you dispatch any changes to dependents from
      * this method, you MUST call [dispatchChangesBatched]
      */
-    abstract onDependenciesChanged(dependencies: any): void;
+    abstract onDependenciesChanged(): void;
 
     requestBatchedChanges(recipient: IChangeBatcher) {
         if (this === recipient) {
@@ -144,7 +135,7 @@ export abstract class BaseSubContext implements ISubContext, IChangeBatcher {
     }
 
     notifyChangesBatched() {
-        this.onDependenciesChanged(this.dependencyValues);
+        this.onDependenciesChanged();
         this.dispatchChangesBatched();
     }
 

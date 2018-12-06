@@ -39,7 +39,7 @@ implements IRef<V>, ISource<V> {
         return this.lastValue;
     }
 
-    onDependenciesChanged(dependencies: any) {
+    onDependenciesChanged() {
         // compute new value; if it has changed, notify subscribers
         const last = this.lastValue;
         const next = this.forceDeref();

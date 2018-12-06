@@ -10,7 +10,7 @@ class StoreContext<T> extends BaseSubContext {
         this.setStore(store);
     }
 
-    onDependenciesChanged(dependencies: any) {
+    onDependenciesChanged() {
         throw new Error("StoreContext should have no dependencies");
     }
 
@@ -167,11 +167,10 @@ export class Store<V> implements IStoreImpl<V> {
         }
     }
 
-    private dispatchStateChanged(providedSnapshot?: V) {
-        const snapshot = providedSnapshot || this.state;
-        withContext(this.ref, (state) => {
-            this.ref.onDependenciesChanged(state);
-        }, snapshot);
+    private dispatchStateChanged() {
+        withContext(this.ref, () => {
+            this.ref.onDependenciesChanged();
+        });
     }
 
     private applyEventsToState(fns: StoreEvent<V>[]) {
@@ -182,7 +181,7 @@ export class Store<V> implements IStoreImpl<V> {
         if (newState !== undefined) {
             // dispatch the new state
             this.state = newState;
-            this.dispatchStateChanged(newState);
+            this.dispatchStateChanged();
         }
     }
 
