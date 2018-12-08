@@ -1,5 +1,5 @@
 import { BaseSubContext, GlobalContextManager, withContext } from "./context";
-import { IRef, ISource, IStoreImpl, Params, SubFn, Subscription } from "./model";
+import { IRef, ISource, Params, SubFn, Subscription } from "./model";
 import { createCacheFor } from "./sub-cache";
 import { NO_VALUE, Valueless } from "./sub-values";
 import { areSame } from "./util";
@@ -24,7 +24,13 @@ implements IRef<V>, ISource<V> {
 
     deref(): V {
         if (this.lastValue === NO_VALUE) {
-            return this.forceDeref();
+            const value = this.forceDeref();
+
+            // if we deref without context (IE: we have no subscribers)
+            // we should not retain the cached value
+            this.tryInvalidate();
+
+            return value;
         }
 
         // we have a valid cached value, but since we're not actually
@@ -63,12 +69,7 @@ implements IRef<V>, ISource<V> {
         // if we go to zero subscribers, we should invalidate
         // our cached value, since we're probably not being
         // notified of changes if nobody is interested in us
-        if (!this.subscribers.size) {
-            this.lastValue = NO_VALUE;
-
-            const cb = this.onNoSubscribers;
-            if (cb) cb();
-        }
+        this.tryInvalidate();
     }
 
     toString(): string {
@@ -89,46 +90,25 @@ implements IRef<V>, ISource<V> {
         this.lastValue = v;
         return v;
     }
-}
 
-// NOTE: we use an extra layer of indirection so that sub()
-// doesn't have to be called within a context. If it's a big deal,
-// we could add extra logic to detect if it *is* in a context and
-// optimize away the indirection...
-class RootReference<V> extends Reference<V, []> {
-    constructor() {
-        super(() => {
-            const s = GlobalContextManager.store();
+    private tryInvalidate() {
+        if (!this.subscribers.size) {
+            this.lastValue = NO_VALUE;
 
-            // this seems like a hack:
-            return (s as IStoreImpl<any>).deref();
-        }, []);
-        this.name = "Reference(@root)";
+            const cb = this.onNoSubscribers;
+            if (cb) cb();
+        }
     }
-
-    deref() {
-        // TODO we only need to do this if the store has changed?
-        // does it matter?
-        return super.forceDeref();
-    }
-}
-const rootRef = new RootReference();
-
-function rootSub<V>(): IRef<V> {
-    return rootRef as any as IRef<V>;
 }
 
 /**
- * If `fn` is omitted, this returns the full root state
+ * Declare a subscription that computes its value using the given function. The
+ * returned value is a function that can be invoked with the same parameters as
+ * `fn` and returns an `IRef<V>` for the value returned by your `fn`.
  */
 export function sub<V, P extends Params = []>(
-    fn?: SubFn<V, P>,
+    fn: SubFn<V, P>,
 ): Subscription<V, P> {
-    if (!fn) {
-        // root subscription
-        return rootSub;
-    }
-
     const cache = createCacheFor(fn);
 
     return function subscription(...params: P) {

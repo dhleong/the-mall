@@ -7,5 +7,3 @@ export interface ICounterState {
 export const counterStore = new Store<ICounterState>({
     count: 0,
 });
-
-export const rootSub = sub<ICounterState>();

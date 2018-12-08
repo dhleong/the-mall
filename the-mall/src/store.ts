@@ -1,27 +1,6 @@
-import { BaseSubContext, withContext } from "./context";
-import { IStoreImpl, ISubContext, StoreEvent } from "./model";
+import { withContext } from "./context";
+import { IStoreImpl, StoreEvent } from "./model";
 import { Reference } from "./sub";
-
-class StoreContext<T> extends BaseSubContext {
-    constructor(
-        store: Store<T>,
-    ) {
-        super();
-        this.setStore(store);
-    }
-
-    onDependenciesChanged() {
-        throw new Error("StoreContext should have no dependencies");
-    }
-
-    subscribeTo(parent: ISubContext) {
-        // nop; StoreContext is never interested in dependencies
-    }
-
-    toString(): string {
-        return "StoreContext()";
-    }
-}
 
 export type DeferEventsFn = (runQueuedEvents: () => void) => void;
 
@@ -121,12 +100,6 @@ export class Store<V> implements IStoreImpl<V> {
 
     public dispatchSync(f: StoreEvent<V>) {
         this.applyEventsToState([f]);
-    }
-
-    getContext(): ISubContext {
-        // TODO cache?
-        // TODO should this be a Reference?
-        return new StoreContext(this);
     }
 
     getSnapshot(): V {

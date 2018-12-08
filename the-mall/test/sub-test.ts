@@ -3,7 +3,7 @@ import * as chai from "chai";
 import { Store } from "../src/store";
 import { sub } from "../src/sub";
 
-import { derefWith, IStoreState, newState } from "./test-util";
+import { IStoreState, newState } from "./test-util";
 
 chai.should();
 
@@ -14,8 +14,8 @@ beforeEach(function() {
 
 describe("Level 0 sub()", () => {
     it("returns the store", () => {
-        const s = sub();
-        const v = derefWith(store, s());
+        const s = sub(() => store.deref());
+        const v = s().deref();
         v.should.deep.equal(newState());
     });
 });
@@ -23,7 +23,7 @@ describe("Level 0 sub()", () => {
 describe("Level 1 sub()", () => {
     it("supports const-ish values", () => {
         const s = sub(() => 42);
-        const v = derefWith(store, s());
+        const v = s().deref();
         v.should.equal(42);
     });
 
@@ -31,7 +31,7 @@ describe("Level 1 sub()", () => {
         const s = sub((one: number, two: string) =>
             `${two}${one}`,
         );
-        const v = derefWith(store, s(42, "Answer:"));
+        const v = s(42, "Answer:").deref();
         v.should.equal("Answer:42");
     });
 });
@@ -43,7 +43,7 @@ describe("Level 2 sub()", () => {
             return sub1().deref() + 9001;
         });
 
-        const v = derefWith(store, sub2());
+        const v = sub2().deref();
         v.should.equal(9043);
     });
 });

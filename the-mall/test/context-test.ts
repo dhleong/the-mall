@@ -25,8 +25,6 @@ beforeEach(function() {
     store = new Store(newState());
 });
 
-const rootSub = sub<IStoreState>();
-
 const setShip = events.store((old: IStoreState, name: string, score: number) => {
     return {
         ...old,
@@ -44,9 +42,9 @@ describe("Context", () => {
         ctx.setStore(store);
 
         const shipsCount = sub(function _shipsCount() {
-            return Object.keys(rootSub().deref().ships).length;
+            return Object.keys(store.deref().ships).length;
         });
-        const ships = sub(function _ships() { return rootSub().deref().ships; });
+        const ships = sub(function _ships() { return store.deref().ships; });
         const shipById = sub(function _byId(id: string) {
             return ships().deref()[id];
         });
@@ -66,6 +64,11 @@ describe("Context", () => {
 
         // no changes yet
         ctx.dependencyChanges.should.equal(0);
+
+        // verify subs are cached
+        shipsCount().should.equal(shipsCount());
+        ships().should.equal(ships());
+        shipById("serenity").should.equal(shipById("serenity"));
 
         // changing the Store triggers a pass
         store.dispatchSync(setShip("serenity", 9001));
@@ -96,10 +99,10 @@ describe("Context", () => {
         ctx.setStore(store);
 
         // level 1
-        const ships = sub(() => rootSub().deref().ships);
-        const ships2 = sub(() => rootSub().deref().ships);
-        const pilots = sub(() => rootSub().deref().pilots);
-        const pilots2 = sub(() => rootSub().deref().pilots);
+        const ships = sub(() => store.deref().ships);
+        const ships2 = sub(() => store.deref().ships);
+        const pilots = sub(() => store.deref().pilots);
+        const pilots2 = sub(() => store.deref().pilots);
 
         // level2
         const shipsCount = sub(() => {

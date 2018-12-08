@@ -24,16 +24,6 @@ class GlobalContextManagerImpl implements IContextManager {
         if (!this.contexts.length) return null;
         return this.contexts[0];
     }
-
-    store(): IStore<any> {
-        for (let i = this.contexts.length - 1; i >= 0; --i) {
-            const s = this.contexts[i].store();
-            if (s) return s;
-        }
-
-        // TODO any way we can detect if we're not in a connected component?
-        throw new Error("No store in any registered context. Make sure your component is wrapped in connect()");
-    }
 }
 
 export const GlobalContextManager = new GlobalContextManagerImpl();
@@ -157,35 +147,21 @@ export abstract class BaseSubContext implements ISubContext, IChangeBatcher {
     }
 }
 
-export function withContext<V, P extends Params = []>(store: IStore<any>, fn: SubFn<V, P>, ... params: P): V;
-export function withContext<V, P extends Params = []>(context: ISubContext, fn: SubFn<V, P>, ... params: P): V;
 export function withContext<V, P extends Params = []>(
-    context: ISubContext | IStore<any>,
+    context: ISubContext,
     fn: SubFn<V, P>,
     ... params: P
 ): V {
-    // tslint:disable-next-line
-    const isGivenStore = !!(context as any)["getContext"];
-
-    const subContext: ISubContext = isGivenStore
-        ? (context as IStore<any>).getContext()
-        : context as ISubContext;
-
     const current = GlobalContextManager.peek();
     if (current) {
         // the Context stack is depth-first, so the "current"
         // Context will *depend on* our new one
-        current.subscribeTo(subContext);
+        current.subscribeTo(context);
     }
 
-    GlobalContextManager.push(subContext);
+    GlobalContextManager.push(context);
     const result = fn(...params);
-    GlobalContextManager.pop(subContext);
-
-    if (isGivenStore) {
-        // ?
-        subContext.dispose();
-    }
+    GlobalContextManager.pop(context);
 
     return result;
 }

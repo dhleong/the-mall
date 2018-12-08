@@ -4,10 +4,10 @@ import { connect, sub, useDispatch, events } from "the-mall";
 
 import "./App.css";
 import logo from "./logo.svg";
-import { ICounterState, rootSub } from "./store";
+import { ICounterState, counterStore } from "./store";
 
 const countSub = sub(function countSub() {
-  const root = rootSub().deref();
+  const root = counterStore.deref();
   return root.count;
 });
 

@@ -60,7 +60,6 @@ export interface IContextManager {
     peek(): ISubContext | null;
     push(context: ISubContext): void;
     pop(context: ISubContext): void;
-    store(): IStore<any> | never;
 }
 
 export type StoreEvent<T> = (old: T, store: IStore<T>) => T;
@@ -84,8 +83,6 @@ export interface IStore<V> {
      * factories in the `events` module.
      */
     dispatchSync: IDispatchFn<V>;
-
-    getContext(): ISubContext;
 
     getSnapshot(): V;
     loadSnapshot(snapshot: V): void;
