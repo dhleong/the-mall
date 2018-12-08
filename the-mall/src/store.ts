@@ -5,18 +5,18 @@ import { Reference } from "./sub";
 export type DeferEventsFn = (runQueuedEvents: () => void) => void;
 
 export type StoreOptions<T> = {
-  /**
-   * Only used if you don't provide a specific processQueue fn
-   */
-  deepCopyStateForEvent?: (v: T) => T,
+    /**
+     * Only used if you don't provide a specific processQueue fn
+     */
+    deepCopyStateForEvent?: (v: T) => T,
 
-  /**
-   * Provide your own function to defer the batched processing
-   * of dispatched events. By default uses window.requestAnimationFrame
-   */
-  deferEvents?: DeferEventsFn,
+    /**
+     * Provide your own function to defer the batched processing
+     * of dispatched events. By default uses window.requestAnimationFrame
+     */
+    deferEvents?: DeferEventsFn,
 
-  processQueue?: (state: T, fns: StoreEvent<T>[]) => T,
+    processQueue?: (state: T, fns: StoreEvent<T>[]) => T,
 };
 
 const identity = (v: any) => v;
@@ -25,9 +25,9 @@ const identity = (v: any) => v;
  * Store State Machine
  */
 enum State {
-  Idle,
-  Deferred,
-  Running,
+    Idle,
+    Deferred,
+    Running,
 }
 
 export class Store<V> implements IStoreImpl<V> {
@@ -99,6 +99,10 @@ export class Store<V> implements IStoreImpl<V> {
     }
 
     public dispatchSync(f: StoreEvent<V>) {
+        if (this.fsm === State.Running) {
+            throw new Error("You may not dispatchSync from an event handler");
+        }
+
         this.applyEventsToState([f]);
     }
 
