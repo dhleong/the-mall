@@ -30,12 +30,20 @@ const _CountFunction = () => (
 );
 const CountFunction = connect(_CountFunction);
 
-const increment = events.store<ICounterState>(state => {
+const increment = events.store((state: ICounterState) => {
   return {
     ...state,
     count: state.count + 1,
   }
 });
+
+const incrementBy = events.store((state: ICounterState, amount: number) => {
+  return {
+    ...state,
+    count: state.count + amount,
+  }
+});
+
 
 export default function App() {
   const dispatch = useDispatch<ICounterState>();
@@ -50,7 +58,7 @@ export default function App() {
         <CountFunction />
         <CountComponent />
         <input type="button"
-          onClick={() => dispatch(increment())}
+          onClick={() => dispatch(incrementBy(1))}
           value="Increment"
         />
       </header>
