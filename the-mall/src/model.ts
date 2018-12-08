@@ -71,7 +71,7 @@ export interface IDispatchFn<StoreState> {
     (event: StoreEvent<StoreState>): void;
 }
 
-export interface IStore<V> {
+export interface IStore<V> extends IRef<V> {
     /**
      * Dispatch a StoreEvent, created by one of the factories in the
      * `events` module.
@@ -88,5 +88,5 @@ export interface IStore<V> {
     loadSnapshot(snapshot: V): void;
 }
 
-export interface IStoreImpl<V> extends IStore<V>, IRef<V> {
+export interface IStoreImpl<V> extends IStore<V> {
 }
