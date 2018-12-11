@@ -112,7 +112,7 @@ them to listen for changes to those values and automatically re-render.
 
 Let's take a look:
 
-```typescript
+```javascript
 const ShipViewer = (id: string) => {
 
   // Just like in our subscriptions, we can invoke a subscription and deref
@@ -206,9 +206,9 @@ export default connect(ShipViewer);
 When you click on `Load Manually`:
 
 * An Event will get `dispatch()`'d to `MyStore`, where the compute function
-  passed to `event.store()` will be called with the current state of the store
-  and the Ship object we passed to `putShip`, and the Store's state will be
-  updated.
+  passed to `event.store()` will be called with the current state of the
+  store and the Ship object we passed to `putShip`, and the Store's state
+  will be updated.
 * `MyStore` will notify the `allShips` subscription that it has changed
 * `allShips` will pull out the `ships` key and, seeing that it has also
   changed, notify the `shipById2` subscription.
@@ -217,7 +217,103 @@ When you click on `Load Manually`:
 * `ShipViewer` will finally render again, using the changed `ship` value.
 
 If you were to click on `Load Manually` again, only the first step would
-happen—since the `ships` map has not changed, `allShips` will not have changed,
-so the component doesn't need to re-render!
+happen—since the `ships` map has not changed, `allShips` will not have
+changed, so the component doesn't need to re-render!
+
+### Effect-ful Events
+
+You can get a lot done with the basic `events.store`-type events, but at some
+point you may need to cause more side-effects than simply updating the state
+of the Store—like kicking off an Ajax request to load more data, for example.
+Sure, you could just do it in an `events.store`-type event, but that makes
+your event handler somewhat difficult to test, and also, in general, spinning
+off side effects from things that are supposed to just purely update state
+tends to lead to a death by a thousand cuts. So, what do we do? The answer
+lies in Effects.
+
+Effects are basically plain old functions that do things. The Mall provides a
+handful of built-in Effects, such as one that updates the state of the Store,
+or one that dispatches another event.  For example, we can rewrite
+`putCampaign` as an Effect-ful event handler like this:
+
+```typescript
+// Effect-ful event handlers are necessarily a bit more complex than `store`
+// functions, since they can do more!  In this case, instead of getting the old
+// state as the first parameter, the old state is provided in the `state` key
+// of a special new object. More on that later.
+export const putShip = events.fx((fx: IFx<IStore>, ship: Ship) => {
+    // The current state is provided as a key on the "effector,"
+    // here called `fx`.
+    const state = fx.state;
+
+    // Instead of returning the new state, you provide it to the
+    // `state` Effect via the "effector."
+    fx.state(
+        {
+            ...state,
+            ships: {
+                ...state.ships,
+
+                [ship.id]: ship,
+            },
+        }
+    );
+});
+```
+
+Probably, you will want more than just the default Effects, though. You might
+imagine an `ajax` function that loads JSON from an URL and `dispatch()`'s an
+event to store that data into the DB:
+
+```typescript
+
+export async function ajax(
+    // all effect handlers can receive the Store instance as their first
+    // argument. This is provided for you by the Mall when the effect is
+    // produced by an event handler, in case you need to `.dispatch()` an
+    // event, as here:
+    store: IStore<IState>,
+
+    // the parameters following the store instance are what you provide when
+    // producing the effect in an event handler:
+    url: string,
+    key: string
+) {
+    const json = await loadJson(url);
+    store.dispatch(setJsonValue(key, json));
+};
+```
+
+Now to use this, you simply `produce()` it from your Effectful Event Handler:
+
+```typescript
+export const loadShip = events.fx((fx: IFx<IState>, id: string) => {
+    // Note this special syntax. Instead of invoking the function directly,
+    // let the Mall do it for you to keep your event handler pure! Simply
+    // pass the effect handler as the first argument to `produce()`, and
+    // any arguments (except for the optional IStore first argument) after.
+    // The Mall is smart enough to provide the IStore instance for you if
+    // (and only if!) you wanted it.
+    fx.produce(ajax, `/ships/${id}`, keyForShip(id));
+});
+```
+
+That's it! Your `loadShip` event can be used just like any other event:
+
+```typescript
+dispatch(loadShip("serenity"));
+```
+
+and can be tested without having to worry about the side effects (which can
+themselves be tested in isolation in the usual way—they're just functions!):
+
+```typescript
+describe("loadShip", () => {
+    it("requests AJAX load", () => {
+        const fx = dispatchEffectful(loadShip("serenity"));
+        fx.should.have.produced(ajax, "/ship/serenity", "$serenity");
+    });
+});
+```
 
 [1]: https://github.com/Day8/re-frame
