@@ -21,3 +21,5 @@ export function areSame(a: any, b: any): boolean {
 
     return a === b;
 }
+
+export const identity = (v: any) => v;

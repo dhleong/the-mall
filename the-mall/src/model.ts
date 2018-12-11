@@ -90,3 +90,42 @@ export interface IStore<V> extends IRef<V> {
 
 export interface IStoreImpl<V> extends IStore<V> {
 }
+
+/*
+ * Effects
+ */
+
+export type EffectHandler<State, P extends Params> = (store: IStore<State>, ... params: P) => any;
+export type EffectHandlerParams<T> =
+    T extends EffectHandler<infer _, infer P> ? P
+    : never;
+
+export type EffectVector<P extends Params, T extends EffectHandler<any, P>> = [T, P];
+export type _EffectVector<T extends EffectHandler<any, any>> = [T, EffectHandlerParams<T>];
+export type StateEffectVector<State> = _EffectVector<EffectHandler<State, any[]>>;
+
+/**
+ * Public Effector interface
+ */
+export interface IFx<State> {
+    /** Produce an effect */
+    produce(effect: StateEffectVector<State>): void;
+
+    // conveniences for built-in effects
+    store(newState: State): void;
+    dispatch(event: StoreEvent<State>): void;
+    dispatchLater(event: StoreEvent<State>, timeoutMillis: number): void;
+}
+
+/** "Internal" interface for IFx implementations */
+export interface IConfigurableFx<State> extends IFx<State> {
+    state: State;
+    effects: StateEffectVector<State>[];
+
+    reset(): void;
+}
+
+export interface IEffectorFactory<State> {
+    acquire(state: State): IConfigurableFx<State>;
+    release(effector: IConfigurableFx<State>): void;
+}

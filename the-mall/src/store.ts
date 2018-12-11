@@ -1,6 +1,7 @@
 import { withContext } from "./context";
 import { IStoreImpl, StoreEvent } from "./model";
 import { Reference } from "./sub";
+import { identity } from "./util";
 
 export type DeferEventsFn = (runQueuedEvents: () => void) => void;
 
@@ -18,8 +19,6 @@ export type StoreOptions<T> = {
 
     processQueue?: (state: T, fns: StoreEvent<T>[]) => T,
 };
-
-const identity = (v: any) => v;
 
 /**
  * Store State Machine

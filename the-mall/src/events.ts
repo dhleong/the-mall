@@ -1,4 +1,7 @@
+import { SingleEffectorFactory } from "./effects";
 import {
+    IEffectorFactory,
+    IFx,
     IStore,
     Params,
     StoreEvent,
@@ -26,21 +29,58 @@ export function store<State, P extends Params>(
  */
 export function store<State, P extends Params>(
     fn: StoreEventFn<State> | StorePropsEventFn<State, P>,
-): (...props: P) => StoreEvent<State> {
+): (...params: P) => StoreEvent<State> {
 
-    // NOTE: right now there are no "effects," so we just basically
-    // pass this through directly. In the future, however, we might
-    // wrap this in a "store" effect handler.
+    // NOTE: if we ever add interceptors, it might be useful
+    // to have this delegate to fx(). For now, though, this
+    // is somewhat more efficient
     if (fn.length === 1) {
-        // no props, only state
+        // no params, only state
         return () => fn as StoreEvent<State>;
     }
 
-    const withProps = fn as StorePropsEventFn<State, P>;
-    return (...props: P) => {
+    const withParams = fn as StorePropsEventFn<State, P>;
+    return (...params: P) => {
         return (
             state: State,
             _: IStore<State>,
-        ) => withProps(state, ...props);
+        ) => withParams(state, ...params);
     };
+}
+
+/**
+ * Create an Effectful Event Handler.
+ *
+ * @return a factory that creates StoreEvent instances. The arguments you pass
+ * to this factory will be passed along to your handler affector the first
+ * argument, which you use to enqueue effects.
+ */
+export function fx<State, P extends Params>(
+    handler: (fx: IFx<State>, ...params: P) => void,
+): (...params: P) => StoreEvent<State> {
+    const effectors: IEffectorFactory<State> = new SingleEffectorFactory();
+
+    const eventFactory = (...params: P) => {
+
+        // the StoreEvent is a function
+        return (old: State, theStore: IStore<State>) => {
+            const effector = effectors.acquire(old);
+
+            // process the event
+            handler(effector, ...params);
+
+            // dispatch effects
+            effector.effects.forEach(([effectHandler, effectParams]) => {
+                effectHandler(theStore, ...effectParams);
+            });
+
+            // return the new state (if any) and release the effector
+            const newState = effector.state;
+            effectors.release(effector);
+            return newState;
+        };
+
+    };
+    eventFactory.effectors = effectors;
+    return eventFactory;
 }

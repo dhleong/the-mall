@@ -1,6 +1,7 @@
 
 export { connect } from "./connect";
 export { BaseSubContext, withContext } from "./context";
+export { effect } from "./effects";
 export { useDispatch } from "./hooks";
 export { StoreProvider, storeContext } from "./provider";
 export { sub } from "./sub";
