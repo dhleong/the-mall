@@ -95,10 +95,15 @@ export interface IStoreImpl<V> extends IStore<V> {
  * Effects
  */
 
-export type EffectHandler<State, P extends Params> = (store: IStore<State>, ... params: P) => any;
+export type SimpleEffectHandler<P extends Params> = (... params: P) => any;
+export type StateEffectHandler<State, P extends Params> = (store: IStore<State>, ... params: P) => any;
+export type EffectHandler<State, P extends Params> =
+    SimpleEffectHandler<P> | StateEffectHandler<State, P>;
+
 export type EffectHandlerParams<T> =
-    T extends EffectHandler<infer _, infer P> ? P
-    : never;
+    T extends StateEffectHandler<infer _, infer SP> ? SP :
+    T extends SimpleEffectHandler<infer P> ? P :
+    never;
 
 export type EffectVector<P extends Params, T extends EffectHandler<any, P>> = [T, P];
 export type _EffectVector<T extends EffectHandler<any, any>> = [T, EffectHandlerParams<T>];
@@ -109,7 +114,8 @@ export type StateEffectVector<State> = _EffectVector<EffectHandler<State, any[]>
  */
 export interface IFx<State> {
     /** Produce an effect */
-    produce(effect: StateEffectVector<State>): void;
+    produce<P extends Params>(handler: SimpleEffectHandler<P>, ...params: P): void;
+    produce<P extends Params>(handler: StateEffectHandler<State, P>, ...params: P): void;
 
     // conveniences for built-in effects
     store(newState: State): void;
@@ -122,6 +128,7 @@ export interface IConfigurableFx<State> extends IFx<State> {
     state: State;
     effects: StateEffectVector<State>[];
 
+    invokeQueued(store: IStore<State>): void;
     reset(): void;
 }
 

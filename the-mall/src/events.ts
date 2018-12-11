@@ -70,9 +70,7 @@ export function fx<State, P extends Params>(
             handler(effector, ...params);
 
             // dispatch effects
-            effector.effects.forEach(([effectHandler, effectParams]) => {
-                effectHandler(theStore, ...effectParams);
-            });
+            effector.invokeQueued(theStore);
 
             // return the new state (if any) and release the effector
             const newState = effector.state;

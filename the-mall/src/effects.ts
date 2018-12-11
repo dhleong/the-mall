@@ -1,29 +1,14 @@
 import {
     EffectHandler,
-    EffectHandlerParams,
-    EffectVector,
     IConfigurableFx,
     IEffectorFactory,
     IStore,
+    Params,
+    SimpleEffectHandler,
+    StateEffectHandler,
     StateEffectVector,
     StoreEvent,
 } from "./model";
-
-/*
- * Builtin Effects and the `effect()` factory
- */
-
-/**
- * Create an Effect handler
- */
-export function effect<State>(
-    handler: EffectHandler<State, any[]>,
-): (...params: EffectHandlerParams<typeof handler>) =>
-    EffectVector<EffectHandlerParams<typeof handler>, typeof handler> {
-    return (...params: EffectHandlerParams<typeof handler>) => {
-        return [handler, params];
-    };
-}
 
 /*
  * These builtin effects don't use the effect() factory because they
@@ -31,14 +16,14 @@ export function effect<State>(
  * in the Effector that use them directly
  */
 
-export function dispatch<State>(
+function dispatch<State>(
     theStore: IStore<State>,
     event: StoreEvent<State>,
 ) {
     theStore.dispatch(event);
 }
 
-export function dispatchLater<State>(
+function dispatchLater<State>(
     theStore: IStore<State>,
     event: StoreEvent<State>,
     timeoutMillis: number,
@@ -62,15 +47,30 @@ abstract class BaseEffector<State> implements IConfigurableFx<State> {
     }
 
     dispatch(event: StoreEvent<State>): void {
-        this.produce([dispatch, [event]]);
+        this.produce(dispatch, [event]);
     }
 
     dispatchLater(event: StoreEvent<State>, timeoutMillis: number): void {
-        this.produce([dispatchLater, [event, timeoutMillis]]);
+        this.produce(dispatchLater, [event, timeoutMillis]);
     }
 
-    produce(effectVector: StateEffectVector<State>) {
-        this.effects.push(effectVector);
+    produce<P extends Params>(handler: SimpleEffectHandler<P>, ...params: P): void;
+    produce<P extends Params>(handler: StateEffectHandler<State, P>, ...params: P): void;
+    produce<P extends Params>(handler: EffectHandler<State, P>, ...params: P) {
+        this.effects.push([handler as EffectHandler<State, any[]>, params]);
+    }
+
+    /**
+     * Invokes the effects enqueued in this Effector
+     */
+    invokeQueued(store: IStore<State>) {
+        this.effects.forEach(([effectHandler, effectParams]) => {
+            if (effectParams.length === effectHandler.length) {
+                (effectHandler as SimpleEffectHandler<any[]>)(...effectParams);
+            } else {
+                effectHandler(store, ...effectParams);
+            }
+        });
     }
 
     reset() {
@@ -79,7 +79,7 @@ abstract class BaseEffector<State> implements IConfigurableFx<State> {
     }
 }
 
-class DefaultEffector<State> extends BaseEffector<State> {
+export class DefaultEffector<State> extends BaseEffector<State> {
     constructor(
         public state: State,
     ) {
