@@ -23,12 +23,11 @@ class _CountComponent extends React.Component {
 }
 const CountComponent = connect(_CountComponent);
 
-const _CountFunction = () => (
+const CountFunction = connect(() => (
   <p>
     Count in Functional Component = {countSub().deref()}
   </p>
-);
-const CountFunction = connect(_CountFunction);
+));
 
 const increment = events.store((state: ICounterState) => {
   return {

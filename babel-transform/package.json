@@ -1,0 +1,27 @@
+{
+  "name": "babel-plugin-transform-mall-types",
+  "version": "1.0.0",
+  "description": "Transform subscriptions and connected components to include their names",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "lint": "tslint --project tsconfig.json",
+    "build": "tsc -p .",
+    "build:watch": "tsc -p . --watch",
+    "test": "mocha -r ts-node/register 'test/**/*-test.ts'",
+    "test:watch": "mocha --inspect --watch --watch-extensions=ts -r ts-node/register 'test/**/*-test.ts'"
+  },
+  "author": "Daniel Leong",
+  "license": "ISC",
+  "peerDependencies": {
+    "@babel/core": "^7.5.5"
+  },
+  "devDependencies": {
+    "@babel/traverse": "^7.5.5",
+    "@babel/types": "^7.5.5",
+    "@types/babel__traverse": "^7.0.7",
+    "@types/mocha": "^5.2.7",
+    "babel-plugin-tester": "^6.4.0",
+    "mocha": "^6.2.0"
+  }
+}
