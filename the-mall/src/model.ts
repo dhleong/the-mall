@@ -1,7 +1,13 @@
 
 export type Params = any[];
 export type SubFn<V, P extends Params> = (... params: P) => V;
-export type Subscription<V, P extends Params> = (... params: P) => IRef<V>;
+
+// tslint:disable-next-line interface-name
+export interface Subscription<V, P extends Params> {
+    (... params: P): IRef<V>;
+
+    displayName?: string;
+}
 
 export interface IRef<V> {
     deref(): V;

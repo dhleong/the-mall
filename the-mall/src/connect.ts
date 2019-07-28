@@ -73,8 +73,10 @@ function nameFrom<P>(
     hoc: Component<P>,
     context: ComponentContext,
 ) {
-    const compName = (Base as any).name || Base.displayName;
-    hoc.displayName = `Connected${compName || "Component"}`;
+    if (!hoc.displayName) {
+        const compName = (Base as any).name || Base.displayName;
+        hoc.displayName = `Connected${compName || "Component"}`;
+    }
     context.displayName = hoc.displayName + ".Context";
 }
 
