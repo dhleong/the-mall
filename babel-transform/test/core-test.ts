@@ -11,33 +11,68 @@ pluginTester({
     tests: {
         "Add name to connect() function expression": {
             code: `
+                import { connect } from "the-mall";
                 const component = connect(function() {});
             `,
 
             output: `
+                import { connect } from "the-mall";
                 const component = connect(function component() {});
             `,
         },
 
         "Add name to sub() function expression": {
             code: `
-                const component = sub(function() {});
+                import { sub } from "the-mall";
+                const subscription = sub(function() {});
             `,
 
             output: `
-                const component = sub(function component() {});
+                import { sub } from "the-mall";
+                const subscription = sub(function subscription() {});
             `,
         },
 
-        // TODO
-        // "Rewrite connect() arrow expression to named function expression": {
-        //     code: `
-        //         const component = connect(() => {});
-        //     `,
-        //
-        //     output: `
-        //         const component = connect(function component() {});
-        //     `,
-        // },
+        "Set displayName on connect() arrow expression": {
+            code: `
+                import { connect } from "the-mall";
+                const component = connect(() => {});
+            `,
+
+            output: `
+                import { connect } from "the-mall";
+                const component = connect(() => {});
+                component.displayName = "component";
+            `,
+        },
+
+        "Set displayName on sub() arrow expression": {
+            code: `
+                import { sub } from "the-mall";
+                const subscription = sub(() => {});
+            `,
+
+            output: `
+                import { sub } from "the-mall";
+                const subscription = sub(() => {});
+                subscription.displayName = "subscription";
+            `,
+        },
+
+        "Ignore similar-looking but unrelated functions": {
+            code: `
+                const sub = () => {};
+
+                const subscription = sub(() => {});
+                const component = connect(() => {});
+            `,
+
+            output: `
+                const sub = () => {};
+
+                const subscription = sub(() => {});
+                const component = connect(() => {});
+            `,
+        },
     },
 });

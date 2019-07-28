@@ -1,4 +1,4 @@
-import { Visitor } from "@babel/traverse";
+import { NodePath, Visitor } from "@babel/traverse";
 import * as types from "@babel/types";
 
 export interface IPlugin {
@@ -15,13 +15,75 @@ function isUnnamedFunction(
         || (types.isFunctionExpression(expr) && !expr.id);
 }
 
-function renameFn(
-    fn: FunctionExpr,
-    newName: string,
-) {
-    if (types.isFunctionExpression(fn)) {
-        // easy case
-        fn.id = types.identifier(newName);
+class MallUseContext {
+
+    constructor(
+        private readonly t: typeof types,
+        private readonly path: NodePath<any>,
+    ) {}
+
+    public isMallImportedInScope(
+        identifier: string,
+    ) {
+        const binding = this.path.scope.getBinding(identifier);
+        if (!binding) {
+            // shouldn't happen? assume it is not, I guess
+            return false;
+        }
+
+        const { t } = this;
+        if (t.isImportSpecifier(binding.path.node)) {
+            // verify it's actually a mall component
+            const declaration = binding.path.find(parent => t.isImportDeclaration(parent));
+            if (t.isImportDeclaration(declaration.node)) {
+                return "the-mall" === declaration.node.source.value;
+            }
+        }
+
+        return false;
+    }
+
+    public renameFn(
+        container: types.CallExpression,
+        fn: FunctionExpr,
+        newName: string,
+    ): void {
+        if (types.isFunctionExpression(fn)) {
+            // easy case
+            fn.id = types.identifier(newName);
+            return;
+        }
+
+        // container.arguments[0] = types.identifier("test");
+        this.setDisplayNameAfter(container, newName);
+    }
+
+    private setDisplayNameAfter(
+        container: types.CallExpression,
+        newName: string,
+    ) {
+        const block = this.path.find(candidate => {
+            if (candidate.parentPath.isBlock()) {
+                return true;
+            }
+            return false;
+        });
+
+        if (!block) {
+            return; // ?
+        }
+
+        const t = this.t;
+        block.insertAfter(
+            t.expressionStatement(t.assignmentExpression(
+                "=",
+                t.memberExpression(
+                    this.path.node.id,
+                    t.identifier("displayName"),
+                ),
+                t.stringLiteral(newName),
+            )),
+        );
     }
 }
 
@@ -52,10 +114,15 @@ export default function mallTransformPlugin(
                 }
 
                 const method = node.init.callee.name;
+                const context = new MallUseContext(t, path);
                 switch (method) {
                 case "sub":
                 case "connect":
-                    renameFn(fn, node.id.name);
+                    if (!context.isMallImportedInScope(method)) {
+                        return;
+                    }
+
+                    context.renameFn(node.init, fn, node.id.name);
                     return;
 
                 default:
