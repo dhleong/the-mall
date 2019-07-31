@@ -6,10 +6,19 @@ import { sub } from "../src/sub";
 import { IStoreState, newState } from "./test-util";
 
 chai.should();
+const { expect } = chai;
 
 let store: Store<IStoreState>;
 beforeEach(function() {
     store = new Store(newState());
+});
+
+describe("Subscription factories", () => {
+    it("support displayNames for their refs", () => {
+        const s = sub("TestSubscription", () => store.deref());
+        const ref = s();
+        expect(ref.displayName).to.equal("Reference(sub(TestSubscription))");
+    });
 });
 
 describe("Level 0 sub()", () => {

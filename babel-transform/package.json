@@ -1,5 +1,5 @@
 {
-  "name": "babel-plugin-transform-mall-types",
+  "name": "@the-mall/babel-plugin-display-name",
   "version": "1.0.0",
   "description": "Transform subscriptions and connected components to include their names",
   "main": "dist/src/index.js",

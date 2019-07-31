@@ -46,7 +46,7 @@ pluginTester({
             `,
         },
 
-        "Set displayName on sub() arrow expression": {
+        "Inject displayName for sub() arrow expression": {
             code: `
                 import { sub } from "the-mall";
                 const subscription = sub(() => {});
@@ -54,8 +54,7 @@ pluginTester({
 
             output: `
                 import { sub } from "the-mall";
-                const subscription = sub(() => {});
-                subscription.displayName = "subscription";
+                const subscription = sub("subscription", () => {});
             `,
         },
 

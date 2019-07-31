@@ -108,18 +108,36 @@ implements IRef<V>, ISource<V> {
  */
 export function sub<V, P extends Params = []>(
     fn: SubFn<V, P>,
+): Subscription<V, P>;
+export function sub<V, P extends Params = []>(
+    displayName: string,
+    fn: SubFn<V, P>,
+): Subscription<V, P>;
+export function sub<V, P extends Params = []>(
+    displayNameOrFn: string | SubFn<V, P>,
+    maybeFn?: SubFn<V, P>,
 ): Subscription<V, P> {
+
+    let displayName: string | undefined;
+    let fn: SubFn<V, P>;
+    if (maybeFn) {
+        fn = maybeFn;
+        displayName = displayNameOrFn as string;
+    } else {
+        fn = displayNameOrFn as SubFn<V, P>;
+    }
+
     const cache = createCacheFor(fn);
 
-    return function subscription(this: Subscription<V, P>, ...params: P) {
+    return function subscription(...params: P) {
         const cached = cache.get(params);
         if (cached) return cached;
 
         const ref = new Reference<V, P>(fn, params);
         cache.put(params, ref);
 
-        if ((this as Subscription<V, P>).displayName) {
-            ref.displayName = `Reference(sub(${this.displayName}))`;
+        if (displayName) {
+            ref.displayName = `Reference(sub(${displayName}))`;
         }
 
         // if the Reference ever ends up with zero active subscriptions, we

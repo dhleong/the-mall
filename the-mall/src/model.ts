@@ -10,6 +10,7 @@ export interface Subscription<V, P extends Params> {
 }
 
 export interface IRef<V> {
+    displayName?: string;
     deref(): V;
 }
 
