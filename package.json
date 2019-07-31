@@ -19,7 +19,7 @@
         "chai": "^4.1.2",
         "lerna": "^3.5.1",
         "mocha": "^5.2.0",
-        "react": "^16.7.0-alpha.2",
+        "react": "^16.8.6",
         "ts-node": "^7.0.1",
         "tslint": "^5.11.0",
         "tslint-react": "^3.6.0",
