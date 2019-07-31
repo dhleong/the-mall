@@ -112,8 +112,8 @@ function connectClass<P>(Base: React.ComponentClass<P>): React.ComponentClass<P>
 }
 
 export function connect<P>(component: Component<P>): Component<P> {
-    // unfortunately, we probably an actual HOC
-    // if we're wrapping a class component:
+    // unfortunately, we probably need to create an actual HOC if we're
+    // wrapping a class component:
     if (component.prototype.render) {
         return connectClass(component as React.ComponentClass<P>);
     }
@@ -128,17 +128,16 @@ export function connect<P>(component: Component<P>): Component<P> {
 
         context.setState = setState;
         useEffect(() => {
-            // we just useEffect so we can clean up nicely
-            // when unmounted:
+            // we just useEffect so we can clean up nicely when unmounted:
             return () => {
                 // on unmount, unsubscribe from context
                 context.dispose();
             };
 
-            // note [] so we don't get called constantly
-            // this effect has no dependencies other than
-            // the lifecycle of the component, so using []
-            // means "don't call again until we're unmounted"
+            // note [] so we don't get called constantly.
+            // this effect has no dependencies other than the lifecycle of the
+            // component, so using [] means "don't call again until we're
+            // unmounted"
             }, []);
 
         return context.performRender(renderFn, props);
