@@ -1,4 +1,4 @@
-import { IChangeBatcher, IContextManager, ISource, isSource, IStore, ISubContext, Params, SubFn } from "./model";
+import { IChangeBatcher, IContextManager, IRef, ISource, isSource, IStore, ISubContext, Params, SubFn } from "./model";
 
 class GlobalContextManagerImpl implements IContextManager {
 
@@ -127,6 +127,20 @@ export abstract class BaseSubContext implements ISubContext, IChangeBatcher {
     notifyChangesBatched() {
         this.onDependenciesChanged();
         this.dispatchChangesBatched();
+    }
+
+    protected describeState() {
+        // only available in debug builds:
+        if (process.env.NODE_ENV !== "production") {
+            const state: any = {};
+            this.subscriptions.forEach((_, source) => {
+                if ((source as any).deref) {
+                    const s = source as any as IRef<unknown>;
+                    state[s.toString()] = (s as any).lastValue;
+                }
+            });
+            return state;
+        }
     }
 
     protected dispatchChangesBatched() {

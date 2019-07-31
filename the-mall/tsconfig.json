@@ -21,7 +21,7 @@
         "declaration": true,
         "noUnusedLocals": true,
         "types": [
-            "chai", "mocha"
+            "chai", "mocha", "node"
         ]
     },
     "include": [

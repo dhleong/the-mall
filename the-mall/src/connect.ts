@@ -25,7 +25,11 @@ class ComponentContext extends BaseSubContext {
 
         const nextState = (this.lastState + 1) % 100;
         this.lastState = nextState;
-        setState(nextState);
+        if (process.env.NODE_ENV !== "production") {
+            setState({ step: nextState, refs: this.describeState() });
+        } else {
+            setState(nextState);
+        }
         this.dispatchChangesBatched();
     }
 
@@ -84,9 +88,7 @@ function connectClass<P>(Base: React.ComponentClass<P>): React.ComponentClass<P>
 
         componentDidMount() {
             context.setState = (state) => {
-                this.setState({
-                    __mall: state,
-                });
+                this.setState({ __mall: state });
             };
         }
 
@@ -118,13 +120,11 @@ export function connect<P>(component: Component<P>): Component<P> {
     const renderFn = component as React.FC<P>;
 
     const hoc = function(props: P) {
-        const [ , setState ] = useState(null);
+        const [ , setState ] = useState({ __mall: null } as { __mall: any});
         const store = useContext(storeContext);
         if (!store) throw new Error("No Store provided in Context");
 
         context.setState = setState;
-        context.setStore(store);
-
         useEffect(() => {
             // we just useEffect so we can clean up nicely
             // when unmounted:
