@@ -9,8 +9,8 @@
     "scripts": {
         "build": "lerna run build",
         "build:watch": "cd the-mall && yarn build:watch",
-        "check": "lerna run build && npm run test",
-        "test": "cd the-mall && yarn test"
+        "check": "lerna run build && yarn test",
+        "test": "(cd the-mall && yarn test) && (cd babel-transform && yarn test)"
     },
     "devDependencies": {
         "@babel/types": "^7.5.5",
