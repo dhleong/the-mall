@@ -38,14 +38,16 @@ export function visit(
     }
 
     const method = node.init.callee.name;
-    const strategy = strategies[method];
-    if (!strategy) return; // unrelated fn
 
     const context = new MallUseContext(t, path);
-    if (!context.isMallImportedInScope(method)) {
+    const resolvedMethodName = context.resolveMallMethodInScope(method);
+    if (!resolvedMethodName) {
         // not actually our version of the fn
         return;
     }
+
+    const strategy = strategies[resolvedMethodName];
+    if (!strategy) return; // unrelated fn
 
     strategy(context, node.init, fn, node.id.name);
 }

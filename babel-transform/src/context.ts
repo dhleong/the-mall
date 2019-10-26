@@ -30,6 +30,37 @@ export class MallUseContext {
         return false;
     }
 
+    public resolveMallMethodInScope(
+        identifier: string,
+    ) {
+        console.log("RESOLVE", identifier);
+        const binding = this.path.scope.getBinding(identifier);
+        if (!binding) {
+            return;
+        }
+
+        const { t } = this;
+        if (!t.isImportSpecifier(binding.path.node)) {
+            // TODO: should we try to trace back to the import?
+            // EG: mySub = sub for some reason?
+            return;
+        }
+
+        // verify it's actually a mall component
+        const declaration = binding.path.find(parent => t.isImportDeclaration(parent));
+        if (!t.isImportDeclaration(declaration.node)) {
+            return;
+        }
+
+        if ("the-mall" !== declaration.node.source.value) {
+            return;
+        }
+
+        // they may have done an `import as`; return the original method
+        const importSpecifier = binding.path.node as types.ImportSpecifier;
+        return importSpecifier.imported.name;
+    }
+
     public insertDisplayNameString(
         callSite: types.CallExpression,
         displayName: string,

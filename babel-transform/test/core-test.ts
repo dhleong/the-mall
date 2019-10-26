@@ -58,6 +58,19 @@ pluginTester({
             `,
         },
 
+        "Inject displayName for renamed sub()": {
+            code: `
+                import { sub as _sub } from "the-mall";
+                const subscription = _sub(() => {});
+            `,
+
+            output: `
+                import { sub as _sub } from "the-mall";
+
+                const subscription = _sub("subscription", () => {});
+            `,
+        },
+
         "Ignore similar-looking but unrelated functions": {
             code: `
                 const sub = () => {};
