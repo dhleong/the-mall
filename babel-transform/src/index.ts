@@ -15,8 +15,8 @@ export default function mallTransformPlugin(
     return {
         name: "the-mall-babel-plugin-transform",
         visitor: {
-            VariableDeclarator: (path) => {
-                visit(t, path);
+            VariableDeclarator: (path, state) => {
+                visit(t, state, path);
             },
         },
     };

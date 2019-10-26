@@ -6,6 +6,7 @@ export class MallUseContext {
 
     constructor(
         private readonly t: typeof types,
+        private readonly importAliases: { [alias: string]: string } | undefined,
         private readonly path: NodePath<any>,
     ) {}
 
@@ -33,9 +34,15 @@ export class MallUseContext {
     public resolveMallMethodInScope(
         identifier: string,
     ) {
-        console.log("RESOLVE", identifier);
         const binding = this.path.scope.getBinding(identifier);
-        if (!binding) {
+        if (!binding && this.importAliases) {
+            // from the macro, an explicit import alias may have
+            // been created for this identifier
+            return this.importAliases[identifier];
+
+        } else if (!binding) {
+            // shouldn't happen? if it does, it shouldn't be possible
+            // for this to actually be a mall var ref
             return;
         }
 

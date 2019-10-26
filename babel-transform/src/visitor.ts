@@ -18,6 +18,7 @@ const strategies: {[fn: string]: IAddDisplayNameStrategy} = {
 
 export function visit(
     t: typeof types,
+    state: { importAliases?: {[alias: string]: string} },
     path: NodePath<types.VariableDeclarator>,
 ) {
     const { node } = path;
@@ -39,7 +40,8 @@ export function visit(
 
     const method = node.init.callee.name;
 
-    const context = new MallUseContext(t, path);
+    const { importAliases } = state || { importAliases: undefined };
+    const context = new MallUseContext(t, importAliases, path);
     const resolvedMethodName = context.resolveMallMethodInScope(method);
     if (!resolvedMethodName) {
         // not actually our version of the fn

@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 
-import { connect, sub, useDispatch, events } from "the-mall";
+import { connect, sub, useDispatch, events } from "the-mall/dist/macro";
 
 import "./App.css";
 import logo from "./logo.svg";
 import { ICounterState, counterStore } from "./store";
 
-const countSub = sub(function countSub() {
+  const countSub = sub(() => {
   const root = counterStore.deref();
   return root.count;
 });
