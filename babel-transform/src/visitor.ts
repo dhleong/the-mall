@@ -1,7 +1,11 @@
 import { NodePath } from "@babel/traverse";
 import * as types from "@babel/types";
 import { MallUseContext } from "./context";
-import { IAddDisplayNameStrategy, renameOrInsertDisplayNameString, renameOrSetDisplayName } from "./strategy";
+import {
+    IAddDisplayNameStrategy,
+    renameOrInsertDisplayNameString,
+    renameOrSetDisplayNameWithPrefix,
+} from "./strategy";
 import { FunctionExpr } from "./types";
 
 function isUnnamedFunction(
@@ -12,7 +16,7 @@ function isUnnamedFunction(
 }
 
 const strategies: {[fn: string]: IAddDisplayNameStrategy} = {
-    "connect": renameOrSetDisplayName,
+    "connect": renameOrSetDisplayNameWithPrefix("Connected"),
     "sub": renameOrInsertDisplayNameString,
 };
 

@@ -36,13 +36,13 @@ pluginTester({
         "Set displayName on connect() arrow expression": {
             code: `
                 import { connect } from "the-mall";
-                const component = connect(() => {});
+                const Component = connect(() => {});
             `,
 
             output: `
                 import { connect } from "the-mall";
-                const component = connect(() => {});
-                component.displayName = "component";
+                const Component = connect(() => {});
+                Component.displayName = "ConnectedComponent";
             `,
         },
 

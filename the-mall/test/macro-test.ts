@@ -29,7 +29,7 @@ pluginTester({
             code: `
                 import { connect, sub } from "../macro";
                 const subscription = sub(() => {});
-                const component = connect(() => {});
+                const Component = connect(() => {});
             `,
             output: `
                 import { sub as _sub } from "the-mall";
@@ -37,9 +37,9 @@ pluginTester({
 
                 const subscription = _sub("subscription", () => {});
 
-                const component = _connect(() => {});
+                const Component = _connect(() => {});
 
-                component.displayName = "component";
+                Component.displayName = "ConnectedComponent";
             `,
         },
     },
