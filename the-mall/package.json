@@ -2,8 +2,8 @@
   "name": "the-mall",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "lint": "tslint --project tsconfig.json",
     "build": "tsc -p .",
@@ -13,6 +13,10 @@
   },
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "@babel/helper-module-imports": "^7.0.0",
+    "@the-mall/babel-plugin-display-name": "*"
+  },
   "peerDependencies": {
     "react": "^16.7.0-alpha.2"
   }

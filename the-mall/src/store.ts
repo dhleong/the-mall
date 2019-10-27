@@ -10,7 +10,7 @@ export class Store<V> implements IStoreImpl<V> {
 
     constructor(initialState: V, opts?: IStoreOptions<V>) {
         this.state = initialState;
-        this.ref.name = "Reference(@Store)";
+        this.ref.displayName = "Reference(@Store)";
         this.ref.setStore(this);
 
         this.fsm = new StoreFsm(

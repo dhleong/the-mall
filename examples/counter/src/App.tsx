@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 
-import { connect, sub, useDispatch, events } from "the-mall";
+import { connect, sub, useDispatch, events } from "the-mall/macro";
 
 import "./App.css";
 import logo from "./logo.svg";
 import { ICounterState, counterStore } from "./store";
 
-const countSub = sub(function countSub() {
+const countSub = sub(() => {
   const root = counterStore.deref();
   return root.count;
 });
@@ -23,12 +23,12 @@ class _CountComponent extends React.Component {
 }
 const CountComponent = connect(_CountComponent);
 
-const _CountFunction = () => (
+const CountFunction = connect(() => (
   <p>
     Count in Functional Component = {countSub().deref()}
   </p>
-);
-const CountFunction = connect(_CountFunction);
+));
+console.log(CountFunction.displayName);
 
 const increment = events.store((state: ICounterState) => {
   return {

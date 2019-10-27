@@ -8,7 +8,7 @@ export class Reference<V, P extends Params>
 extends BaseSubContext
 implements IRef<V>, ISource<V> {
 
-    name: string | undefined;
+    displayName: string | undefined;
 
     onNoSubscribers: (() => void) | null = null;
 
@@ -73,11 +73,11 @@ implements IRef<V>, ISource<V> {
     }
 
     toString(): string {
-        if (this.name) return this.name;
+        if (this.displayName) return this.displayName;
         const fnName = this.pullValue.name;
         if (fnName) {
             const name = `Reference(${fnName})`;
-            this.name = name;
+            this.displayName = name;
             return name;
         }
         return `Reference()`;
@@ -108,7 +108,25 @@ implements IRef<V>, ISource<V> {
  */
 export function sub<V, P extends Params = []>(
     fn: SubFn<V, P>,
+): Subscription<V, P>;
+export function sub<V, P extends Params = []>(
+    displayName: string,
+    fn: SubFn<V, P>,
+): Subscription<V, P>;
+export function sub<V, P extends Params = []>(
+    displayNameOrFn: string | SubFn<V, P>,
+    maybeFn?: SubFn<V, P>,
 ): Subscription<V, P> {
+
+    let displayName: string | undefined;
+    let fn: SubFn<V, P>;
+    if (maybeFn) {
+        fn = maybeFn;
+        displayName = displayNameOrFn as string;
+    } else {
+        fn = displayNameOrFn as SubFn<V, P>;
+    }
+
     const cache = createCacheFor(fn);
 
     return function subscription(...params: P) {
@@ -117,6 +135,10 @@ export function sub<V, P extends Params = []>(
 
         const ref = new Reference<V, P>(fn, params);
         cache.put(params, ref);
+
+        if (displayName) {
+            ref.displayName = `Reference(sub(${displayName}))`;
+        }
 
         // if the Reference ever ends up with zero active subscriptions, we
         // should be good citizens and de-cache it to free up memory
