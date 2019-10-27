@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 
-import { connect, sub, useDispatch, events } from "the-mall/dist/macro";
+import { connect, sub, useDispatch, events } from "the-mall/macro";
 
 import "./App.css";
 import logo from "./logo.svg";
 import { ICounterState, counterStore } from "./store";
 
-  const countSub = sub(() => {
+const countSub = sub(() => {
   const root = counterStore.deref();
   return root.count;
 });
@@ -28,6 +28,7 @@ const CountFunction = connect(() => (
     Count in Functional Component = {countSub().deref()}
   </p>
 ));
+console.log(CountFunction.displayName);
 
 const increment = events.store((state: ICounterState) => {
   return {

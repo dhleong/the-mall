@@ -15,7 +15,7 @@ pluginTester({
     tests: {
         "should work with sub": {
             code: `
-                import { sub } from "../dist/macro";
+                import { sub } from "../macro";
                 const subscription = sub(() => {});
             `,
             output: `
@@ -27,7 +27,7 @@ pluginTester({
 
         "should work with multiple": {
             code: `
-                import { connect, sub } from "../dist/macro";
+                import { connect, sub } from "../macro";
                 const subscription = sub(() => {});
                 const component = connect(() => {});
             `,

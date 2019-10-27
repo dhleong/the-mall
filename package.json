@@ -7,6 +7,7 @@
     ],
     "name": "mall",
     "scripts": {
+        "bootstrap": "lerna link",
         "build": "lerna run build",
         "build:watch": "cd the-mall && yarn build:watch",
         "check": "lerna run build && yarn test",
