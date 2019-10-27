@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 
 import { connect, sub, useDispatch, events } from "the-mall/macro";
 
@@ -29,13 +29,6 @@ const CountFunction = connect(() => (
   </p>
 ));
 console.log(CountFunction.displayName);
-
-const increment = events.store((state: ICounterState) => {
-  return {
-    ...state,
-    count: state.count + 1,
-  }
-});
 
 const incrementBy = events.store((state: ICounterState, amount: number) => {
   return {

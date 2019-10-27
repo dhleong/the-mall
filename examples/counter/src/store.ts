@@ -1,4 +1,4 @@
-import { createStore, sub } from "the-mall";
+import { createStore } from "the-mall";
 
 export interface ICounterState {
     count: number;
