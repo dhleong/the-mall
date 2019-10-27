@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import { connect, sub, useDispatch, events } from "the-mall/macro";
 
 import "./App.css";
 import logo from "./logo.svg";
 import { ICounterState, counterStore } from "./store";
+import { clearLine } from "readline";
 
 const countSub = sub(() => {
   const root = counterStore.deref();
@@ -23,12 +24,29 @@ class _CountComponent extends React.Component {
 }
 const CountComponent = connect(_CountComponent);
 
-const CountFunction = connect(() => (
-  <p>
-    Count in Functional Component = {countSub().deref()}
-  </p>
-));
-console.log(CountFunction.displayName);
+// const CountFunction = connect(() => (
+//   <p>
+//     Count in Functional Component = {countSub().deref()}
+//   </p>
+// ));
+
+const CountFunction = connect(() => {
+  const [ state, setState ] = useState(42);
+  useEffect(() => {
+    const t = setInterval(() => {
+      setState(state + 1);
+    }, 2000);
+
+    return () => {
+      clearInterval(t);
+    };
+  });
+  return (
+    <p>
+      Count in Functional Component ({state}) = {countSub().deref()}
+    </p>
+  );
+});
 
 const incrementBy = events.store((state: ICounterState, amount: number) => {
   return {

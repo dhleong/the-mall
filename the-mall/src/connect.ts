@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useDebugValue, useEffect, useState } from "react";
 
 import { BaseSubContext, withContext } from "./context";
 import { IStore } from "./model";
@@ -57,6 +57,8 @@ class ComponentContext extends BaseSubContext {
         renderFn: React.FC<P>,
         props: P,
     ): React.ReactElement<any> | null {
+        useDebugValue(renderFn.name || renderFn.displayName);
+
         this.inRender = true;
         const result = withContext(this, renderFn, props);
         this.inRender = false;
@@ -86,8 +88,6 @@ function connectClass<P>(Base: React.ComponentClass<P>): React.ComponentClass<P>
     const hoc = class extends Base {
         static contextType = storeContext;
 
-        baseRender = () => super.render();
-
         componentDidMount() {
             context.setState = (state) => {
                 this.setState({ __mall: state });
@@ -103,11 +103,52 @@ function connectClass<P>(Base: React.ComponentClass<P>): React.ComponentClass<P>
             if (!store) throw new Error("No Store provided in Context");
             context.setStore(store);
 
-            return withContext(context, this.baseRender);
+            return withContext(context, super.render);
         }
     };
 
     nameFrom(Base, hoc, context);
+    return hoc;
+}
+
+function connectFunctional<P>(renderFn: React.FC<P>): Component<P> {
+    const context = new ComponentContext();
+
+    const hoc: React.FC<P> = function ConnectedHOC(props: P) {
+        const store = useContext(storeContext);
+        if (!store) throw new Error("No Store provided in Context");
+
+        const [ , setState ] = useState({ __mall: null } as { __mall: any});
+        context.setStore(store);
+
+        useEffect(() => {
+            // ONLY use the first setState fn we get; React devtools seems
+            // to do something to break setState, and in normal use the fn
+            // should be memoized anyway.
+            context.setState = setState;
+
+            // NOTE: we do this deferred, in the effect, in case you're
+            // using the macro to inject the displayName
+            if (!renderFn.name && !renderFn.displayName && hoc.displayName) {
+                renderFn.displayName = hoc.displayName.replace("Connected", "");
+            }
+
+            // we just useEffect so we can clean up nicely when unmounted:
+            return () => {
+                // on unmount, unsubscribe from context
+                context.dispose();
+            };
+
+            // NOTE the use of [] so we don't get called constantly.
+            // this effect has no dependencies other than the lifecycle of the
+            // component, so using [] means "don't call again until we're
+            // unmounted"
+            }, []);
+
+        return context.performRender(renderFn, props);
+    };
+
+    nameFrom(renderFn, hoc, context);
     return hoc;
 }
 
@@ -118,31 +159,6 @@ export function connect<P>(component: Component<P>): Component<P> {
         return connectClass(component as React.ComponentClass<P>);
     }
 
-    const context = new ComponentContext();
     const renderFn = component as React.FC<P>;
-
-    const hoc = function(props: P) {
-        const [ , setState ] = useState({ __mall: null } as { __mall: any});
-        const store = useContext(storeContext);
-        if (!store) throw new Error("No Store provided in Context");
-
-        context.setState = setState;
-        useEffect(() => {
-            // we just useEffect so we can clean up nicely when unmounted:
-            return () => {
-                // on unmount, unsubscribe from context
-                context.dispose();
-            };
-
-            // note [] so we don't get called constantly.
-            // this effect has no dependencies other than the lifecycle of the
-            // component, so using [] means "don't call again until we're
-            // unmounted"
-            }, []);
-
-        return context.performRender(renderFn, props);
-    };
-
-    nameFrom(component, hoc, context);
-    return hoc;
+    return connectFunctional(renderFn);
 }
