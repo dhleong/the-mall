@@ -29,7 +29,8 @@ export class ComposedStore<M extends IStoresMap> implements ComposedStoreOf<M> {
         this.ref = sub(() => {
             const v = {} as ComposedState<M>;
             for (const key of Object.keys(this.stores)) {
-                v[key] = this.stores[key].deref();
+            // NOTE: we go tthe key from the object, so it must be valid
+                v[key as keyof M] = this.stores[key].deref();
             }
             return v;
         })();
@@ -53,7 +54,8 @@ export class ComposedStore<M extends IStoresMap> implements ComposedStoreOf<M> {
     getSnapshot(): ComposedState<M> {
         const v = {} as ComposedState<M>;
         for (const key of Object.keys(this.stores)) {
-            v[key] = this.stores[key].getSnapshot();
+            // NOTE: we go tthe key from the object, so it must be valid
+            v[key as keyof M] = this.stores[key].getSnapshot();
         }
         return v;
     }

@@ -47,11 +47,11 @@ abstract class BaseEffector<State> implements IConfigurableFx<State> {
     }
 
     dispatch(event: StoreEvent<State>): void {
-        this.produce(dispatch, [event]);
+        this.produce(dispatch, event);
     }
 
     dispatchLater(event: StoreEvent<State>, timeoutMillis: number): void {
-        this.produce(dispatchLater, [event, timeoutMillis]);
+        this.produce(dispatchLater, event, timeoutMillis);
     }
 
     produce<P extends Params>(handler: SimpleEffectHandler<P>, ...params: P): void;

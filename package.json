@@ -10,7 +10,7 @@
         "bootstrap": "lerna link",
         "build": "lerna run build",
         "build:watch": "cd the-mall && yarn build:watch",
-        "check": "lerna run build && yarn test",
+        "check": "yarn build && yarn test",
         "test": "(cd the-mall && yarn test) && (cd babel-transform && yarn test)"
     },
     "devDependencies": {
@@ -30,6 +30,6 @@
         "ts-node": "^8.4.1",
         "tslint": "^5.20.0",
         "tslint-react": "^4.1.0",
-        "typescript": "3.2.1"
+        "typescript": "^3.6.4"
     }
 }
