@@ -121,12 +121,14 @@ function connectFunctional<P>(renderFn: React.FC<P>): Component<P> {
         const [ , setState ] = useState({ __mall: null } as { __mall: any});
         context.setStore(store);
 
-        useEffect(() => {
+        if (!context.setState) {
             // ONLY use the first setState fn we get; React devtools seems
             // to do something to break setState, and in normal use the fn
             // should be memoized anyway.
             context.setState = setState;
+        }
 
+        useEffect(() => {
             // NOTE: we do this deferred, in the effect, in case you're
             // using the macro to inject the displayName
             if (!renderFn.name && !renderFn.displayName && hoc.displayName) {
