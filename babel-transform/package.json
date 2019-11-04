@@ -2,8 +2,8 @@
   "name": "@the-mall/babel-plugin-display-name",
   "version": "1.0.0",
   "description": "Transform subscriptions and connected components to include their names",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "lint": "tslint --project tsconfig.json",
     "build": "tsc -p .",
@@ -17,7 +17,9 @@
     "@babel/core": "^7.5.5"
   },
   "devDependencies": {
-    "@babel/traverse": "^7.5.5",
     "babel-plugin-tester": "^7.0.1"
+  },
+  "dependencies": {
+    "@babel/traverse": "^7.6.3"
   }
 }

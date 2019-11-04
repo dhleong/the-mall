@@ -2,7 +2,7 @@ import { addDefault, addNamed } from "@babel/helper-module-imports";
 import traverse from "@babel/traverse";
 import { createMacro } from "babel-plugin-macros";
 
-import babelPlugin from "../../../babel-transform/dist";
+import babelPlugin from "@the-mall/babel-plugin-display-name";
 
 // NOTE: this macro is largely based on styled-components'
 function mallMacro({
