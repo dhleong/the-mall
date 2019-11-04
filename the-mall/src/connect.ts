@@ -155,7 +155,7 @@ function connectFunctional<P>(renderFn: React.FC<P>): Component<P> {
 export function connect<P>(component: Component<P>): Component<P> {
     // unfortunately, we probably need to create an actual HOC if we're
     // wrapping a class component:
-    if (component.prototype.render) {
+    if (component.prototype && component.prototype.render) {
         return connectClass(component as React.ComponentClass<P>);
     }
 
